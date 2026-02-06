@@ -58,30 +58,25 @@ export const getCurrentPosition = () => {
  * @returns {Promise<Object>} Address object with area, city, state, country
  */
 export const reverseGeocode = async (latitude, longitude) => {
+  const url =
+    `https://nominatim.openstreetmap.org/reverse` +
+    `?format=json` +
+    `&lat=${latitude}` +
+    `&lon=${longitude}` +
+    `&zoom=18` +
+    `&addressdetails=1` +
+    `&accept-language=en`;
+
   try {
-    const nominatimUrl =
-      `https://nominatim.openstreetmap.org/reverse` +
-      `?format=json` +
-      `&lat=${latitude}` +
-      `&lon=${longitude}` +
-      `&zoom=18` +
-      `&addressdetails=1` +
-      `&accept-language=en`; // 👈 KEY FIX
-
-    const corsProxy = "https://corsproxy.io/?";
-
-    const response = await fetch(
-      `${corsProxy}${encodeURIComponent(nominatimUrl)}`,
-      {
-        headers: {
-          "User-Agent": "KisanSetu-App/1.0",
-          "Accept-Language": "en",
-        },
-      }
-    );
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "KisanSetu-App/1.0 (contact@yourdomain.com)",
+        "Accept-Language": "en",
+      },
+    });
 
     if (!response.ok) {
-      throw new Error("Failed to fetch location data");
+      throw new Error(`Nominatim error: ${response.status}`);
     }
 
     const data = await response.json();
@@ -90,32 +85,28 @@ export const reverseGeocode = async (latitude, longitude) => {
     const city =
       address.city ||
       address.town ||
-      address.municipality ||
       address.village ||
-      address.hamlet ||
       address.county ||
-      address.state_district ||
       "";
 
     return {
       area:
         address.suburb ||
         address.neighbourhood ||
-        address.hamlet ||
         address.village ||
         "",
       city,
+      district: address.state_district || address.county || city,
       state: address.state || "",
-      district: address.state_district || address.county || city || "",
       country: address.country || "",
       fullAddress: data.display_name || "",
-      raw: address,
     };
-  } catch (error) {
-    console.error("Reverse geocoding error:", error);
-    throw error;
+  } catch (err) {
+    console.error("Reverse geocode failed:", err);
+    throw err;
   }
 };
+
 
 
 /**

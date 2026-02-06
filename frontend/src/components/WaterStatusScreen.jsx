@@ -60,7 +60,7 @@ const WaterStatusScreen = () => {
   const waterData = {
     location: locationDisplay,
     waterAvailability: 400,
-    status: "limited",
+    status: "limited", //limited, safe, critical
   };
 
   const statusConfig = {
@@ -109,7 +109,7 @@ const WaterStatusScreen = () => {
     "bg-gradient-to-b from-white/20 to-white/5 backdrop-blur-lg border border-white/10 shadow-sm";
 
   return (
-    <div className="h-screen bg-[#FAFAF7] font-hindi overflow-hidden relative flex flex-col">
+    <div className="min-h-screen bg-[#FAFAF7] font-hindi relative flex flex-col">
       {/* Background Images */}
       <img
         src="/Hero-image-desktop.webp"
@@ -124,7 +124,7 @@ const WaterStatusScreen = () => {
       {/* Dark Overlay - slightly adjusted to match the warmth of the reference */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#422B06]/80 to-[#422B06]/50" />
 
-      <div className="relative z-10 max-w-md lg:max-w-5xl mx-auto px-5 pt-4 pb-40 md:pb-10 md:pt-24 flex flex-col flex-1 h-full w-full gap-6 overflow-y-auto md:overflow-hidden md:justify-between">
+      <div className="relative z-10 max-w-md lg:max-w-5xl mx-auto px-5 pt-4 pb-40 md:pb-10 md:pt-24 flex flex-col flex-1 w-full gap-6 md:h-full md:overflow-hidden md:justify-between">
         {/* Header - Using glassPillClass to match other pages */}
         <header
           className={`flex justify-between items-center ${glassPillClass} p-5 rounded-[2.5rem] flex-shrink-0`}

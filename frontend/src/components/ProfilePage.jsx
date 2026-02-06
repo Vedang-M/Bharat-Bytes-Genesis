@@ -113,7 +113,7 @@ const ProfilePage = () => {
     "bg-gradient-to-r from-blue-500/90 to-indigo-600/90 hover:from-blue-500 hover:to-indigo-600 text-white shadow-lg shadow-blue-900/20 border border-blue-400/30 backdrop-blur-md";
 
   return (
-    <div className="h-screen bg-[#FAFAF7] font-hindi overflow-hidden relative flex flex-col">
+    <div className="min-h-screen bg-[#FAFAF7] font-hindi relative flex flex-col">
       {/* Fixed Background Layer */}
       <img
         src="/Hero-image-desktop.webp"
@@ -129,7 +129,7 @@ const ProfilePage = () => {
       <div className="absolute inset-0 bg-gradient-to-b from-[#422B06]/80 to-[#422B06]/50" />
 
       {/* Main Container */}
-      <div className="relative z-10 max-w-md lg:max-w-5xl mx-auto px-5 pt-4 pb-36 md:pb-10 md:pt-24 flex flex-col flex-1 h-full w-full">
+      <div className="relative z-10 max-w-md lg:max-w-5xl mx-auto px-5 pt-4 pb-36 md:pb-10 md:pt-24 flex flex-col flex-1 w-full overflow-y-auto md:overflow-hidden md:h-full">
         {/* Profile Grid System */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start overflow-y-auto lg:overflow-visible pr-1 custom-scrollbar">
           {/* LEFT COLUMN: User Card */}

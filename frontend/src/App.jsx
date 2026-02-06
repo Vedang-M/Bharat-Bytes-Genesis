@@ -17,7 +17,10 @@ import CropSelect from "./components/CropSelect";
 import CropResult from "./components/CropResult";
 import ProfilePage from "./components/ProfilePage";
 import ApiDocumentation from "./components/ApiDocumentation";
+import SarpanchDashboard from "./sarpanch/SarpanchDashboard";
 import AppLayout from "./components/AppLayout";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 
 function AuthFlow() {
@@ -122,9 +125,24 @@ function App() {
         {/* API Documentation route (no layout) */}
         <Route path="/dev/api" element={<ApiDocumentation />} />
 
+        {/* Sarpanch Dashboard route (no layout) */}
+        <Route path="/authority/sarpanch" element={<SarpanchDashboard />} />
+
         {/* Redirect any unknown routes to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
     </BrowserRouter>
   );
 }
