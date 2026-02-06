@@ -16,6 +16,10 @@ venv/
 .venv/
 env/
 
+# ML Models Cache
+ml/models/*.joblib
+ml/models/
+
 # OS misc
 .DS_Store
 Thumbs.db
