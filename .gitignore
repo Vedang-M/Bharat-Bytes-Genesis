@@ -29,3 +29,44 @@ firebase-service-account.json
 .DS_Store
 Thumbs.db
 
+# ==================== LARGE DATA FILES ====================
+# NetCDF files (climate/rainfall data)
+*.nc
+*.nc4
+data/*.nc
+data/raw/*.nc
+
+# HDF5 files (hierarchical data)
+*.h5
+*.hdf5
+data/*.h5
+
+# Pickle files (serialized Python objects)
+*.pkl
+*.pickle
+models/*.pkl
+
+# NumPy arrays
+*.npy
+*.npz
+
+# Parquet/Feather (large tabular data)
+*.parquet
+*.feather
+
+# CSV data files (raw datasets)
+data/raw/*.csv
+data/training/*.csv
+
+# Compressed data archives
+data/*.gz
+data/*.zip
+data/*.tar
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Model weights and checkpoints
+*.pth
+*.pt
+checkpoints/

@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
 # Add ml module to path for imports
 ml_path = Path(__file__).parent.parent.parent / "ml"
@@ -78,6 +79,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Enable GZip compression for responses >1KB
+# Browsers automatically decompress gzipped responses
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Include routers
 app.include_router(health.router)
