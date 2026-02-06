@@ -65,8 +65,8 @@ export function AuthProvider({ children }) {
 
                 setLoading(true);
                 setUser(firebaseUser);
-                // Fetch user profile from Firestore
-                await fetchUserProfile(firebaseUser.uid);
+                // Fetch user profile from Firestore (with fallback to Firebase Auth data)
+                await fetchUserProfile(firebaseUser.uid, firebaseUser);
             } else {
                 setUser(null);
                 setUserProfile(null);
@@ -78,17 +78,41 @@ export function AuthProvider({ children }) {
     }, []);
 
     // Fetch user profile from Firestore
-    const fetchUserProfile = async (uid) => {
-        if (!db) return;
-
+    const fetchUserProfile = async (uid, firebaseUser = null) => {
         try {
-            const userDoc = await getDoc(doc(db, "users", uid));
-            if (userDoc.exists()) {
-                setUserProfile({ uid, ...userDoc.data() });
+            if (db) {
+                const userDoc = await getDoc(doc(db, "users", uid));
+                if (userDoc.exists()) {
+                    setUserProfile({ uid, ...userDoc.data() });
+                    return;
+                }
             }
         } catch (error) {
             console.error("Error fetching user profile:", error);
         }
+
+        // Fallback: Create basic profile from Firebase Auth or localStorage
+        // This handles cases where Firestore is unavailable or document doesn't exist
+        let fallbackProfile = { uid, role: "farmer" };
+
+        if (firebaseUser) {
+            fallbackProfile.name = firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "User";
+            fallbackProfile.email = firebaseUser.email;
+            fallbackProfile.createdAt = firebaseUser.metadata?.creationTime || new Date().toISOString();
+        }
+
+        // Try localStorage as another fallback
+        try {
+            const storedUser = localStorage.getItem("genesis_user_data");
+            if (storedUser) {
+                const parsed = JSON.parse(storedUser);
+                fallbackProfile = { ...fallbackProfile, ...parsed };
+            }
+        } catch (e) {
+            console.error("Error reading stored user:", e);
+        }
+
+        setUserProfile(fallbackProfile);
     };
 
     // Sign up with email and password

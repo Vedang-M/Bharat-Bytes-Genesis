@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from datetime import datetime
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query, Depends, Request
 from ..middleware.auth_middleware import require_role
 
 # Add ml module to path
@@ -52,6 +52,7 @@ from ..services.water_status_service import (
     get_alternative_crops,
 )
 from ..utils.water_utils import normalize_water_to_percentage
+from ..firebase_config import get_firestore_client, verify_firebase_token
 
 router = APIRouter(prefix="/api", tags=["Water Wallet"])
 
@@ -60,6 +61,7 @@ router = APIRouter(prefix="/api", tags=["Water Wallet"])
 
 @router.get("/water-status", response_model=WaterStatusSimpleResponse)
 async def get_water_status_simple(
+    request: Request,
     lat: float = Query(..., ge=-90, le=90, description="Latitude"),
     lon: float = Query(..., ge=-180, le=180, description="Longitude"),
     role: str = Depends(require_role("farmer"))
@@ -73,9 +75,11 @@ async def get_water_status_simple(
     - Status: CRITICAL, LOW, MODERATE, or GOOD
     - Timestamp and data source
     
+    Also saves aggregated data to Firestore for the authenticated user.
+    
     Requires 'farmer' role or higher.
     """
-    from datetime import datetime
+    from datetime import datetime, timezone
     
     try:
         result = await get_water_status(lat, lon)
@@ -122,6 +126,52 @@ async def get_water_status_simple(
         
         # Calculate water percentage (500mm = 100%)
         water_percentage = normalize_water_to_percentage(water_level)
+        
+        # ==================== SAVE TO FIRESTORE ====================
+        # Store only aggregated data (no raw NetCDF, no full time series)
+        try:
+            # Get user ID from the auth token
+            auth_header = request.headers.get("Authorization", "")
+            if auth_header.startswith("Bearer "):
+                token = auth_header.split(" ")[1]
+                decoded = verify_firebase_token(token)
+                
+                if decoded and decoded.get("uid"):
+                    uid = decoded["uid"]
+                    db = get_firestore_client()
+                    
+                    if db:
+                        # Create compact document (<10KB)
+                        firestore_doc = {
+                            "user_id": uid,
+                            "location": {
+                                "lat": float(lat),
+                                "lon": float(lon),
+                                "city": loc.get("city"),
+                                "state": loc.get("state"),
+                            },
+                            "water_status": {
+                                "percentage": water_percentage,
+                                "mm": water_level,
+                                "status": status,
+                                "last_updated": datetime.now(timezone.utc).isoformat()
+                            },
+                            "forecast_summary": {
+                                "data_source": data_source.split(";")[0].strip(),
+                                "confidence": 0.85,
+                            },
+                            "updated_at": datetime.now(timezone.utc).isoformat()
+                        }
+                        
+                        # Save to users collection
+                        db.collection("users").document(uid).set(
+                            firestore_doc, 
+                            merge=True  # Merge with existing data
+                        )
+                        print(f"Saved water status to Firestore for user {uid}")
+        except Exception as firestore_error:
+            # Don't fail the request if Firestore save fails
+            print(f"Firestore save warning (non-blocking): {firestore_error}")
         
         return WaterStatusSimpleResponse(
             location=location_str,
