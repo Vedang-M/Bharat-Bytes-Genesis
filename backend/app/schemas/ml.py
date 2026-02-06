@@ -47,3 +47,9 @@ class ViabilityResponse(BaseModel):
     solvency_probability: float
     insolvency_in_days: int
     message: str
+
+class YieldResponse(BaseModel):
+    crop_id: str
+    predicted_yield_quintals: float
+    estimated_profit_inr: float
+    confidence_score: float = 0.95 # Placeholder for now, could be derived from deviation

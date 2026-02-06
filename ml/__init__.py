@@ -4,6 +4,7 @@ Exports main functions for use by backend.
 ALL DATA IS FETCHED FROM REAL APIs - NO HARDCODED VALUES.
 """
 
+from typing import Optional
 from .config import CROP_DATABASE
 from .data_fetchers import (
     fetch_weather_forecast,
@@ -16,6 +17,17 @@ from .water_wallet_model import (
     get_model,
     predict_water_status,
 )
+
+
+def predict_yield(
+    weather: dict,
+    groundwater: dict,
+    soil: dict,
+    crop_id: str
+) -> Optional[float]:
+    """Helper to predict yield using the singleton model."""
+    model = get_model()
+    return model.predict_yield(weather, groundwater, soil, crop_id)
 from .crop_advisor import (
     check_crop_viability,
     get_smart_swap_recommendations,
@@ -37,6 +49,7 @@ __all__ = [
     "WaterWalletModel",
     "get_model",
     "predict_water_status",
+    "predict_yield",
     # Crop advisor
     "check_crop_viability",
     "get_smart_swap_recommendations",

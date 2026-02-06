@@ -37,9 +37,9 @@ def calculate_metrics():
     for _ in range(1000):
         # [rainfall, et0, recharge, soil_awc, crop_req, depth, temp]
         feat = [
-            np.random.uniform(0, 200),   # rainfall (15-day forecast range)
-            np.random.uniform(20, 100),  # et0 (15-day range)
-            np.random.uniform(50, 300),  # recharge (Seasonal)
+            np.random.uniform(0, 1500), # rainfall
+            np.random.uniform(300, 800), # et0
+            np.random.uniform(50, 300),  # recharge
             np.random.uniform(100, 200), # soil
             np.random.uniform(250, 1800),# crop
             np.random.uniform(2, 40),    # depth

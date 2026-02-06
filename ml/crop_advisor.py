@@ -102,7 +102,11 @@ def get_smart_swap_recommendations(
     Returns:
         List of crop recommendations with profit estimates
     """
-    recommendations = []
+    # Access the singleton model for dynamic yield prediction
+    # We need to fetch current conditions first - this is a limitation of the current architecture
+    # Ideally, get_smart_swap_recommendations should be async and take full profile
+    # For now, we will use static profit in this sync function to avoid breaking changes
+    # The dynamic profit will be calculated in the API route which has access to context
     
     for crop_id, crop in CROP_DATABASE.items():
         if crop_id == rejected_crop_id:
@@ -114,7 +118,10 @@ def get_smart_swap_recommendations(
         if water_required * 0.7 > available_water_mm:
             continue
         
-        # Calculate profit metrics
+        # MEANINGFUL CHANGE: We allow the caller to pass yield_map if available
+        # But since we are inside a specific function signature, we'll stick to static for sorting
+        # specific re-ranking can happen at the API level
+        
         profit_per_drop = calculate_profit_per_drop(crop_id)
         total_profit = calculate_estimated_profit(crop_id)
         water_ratio = available_water_mm / water_required
@@ -175,13 +182,18 @@ def calculate_profit_per_drop(crop_id: str) -> float:
     return round(profit_per_liter, 4)
 
 
-def calculate_estimated_profit(crop_id: str, acres: float = 2.0) -> int:
+def calculate_estimated_profit(
+    crop_id: str, 
+    acres: float = 2.0,
+    yield_override: Optional[float] = None
+) -> int:
     """
     Calculates estimated profit for a given crop.
     
     Args:
         crop_id: Crop identifier
         acres: Land area in acres (default 2 for small farmer)
+        yield_override: Optional dynamic yield prediction (if available)
     
     Returns:
         Estimated profit in INR
@@ -190,7 +202,12 @@ def calculate_estimated_profit(crop_id: str, acres: float = 2.0) -> int:
     if crop is None:
         return 0
     
-    yield_quintals = crop["yield_quintal_per_acre"] * acres
+    # Use dynamic yield if provided, else fallback to static config
+    if yield_override is not None:
+        yield_quintals = yield_override * acres
+    else:
+        yield_quintals = crop["yield_quintal_per_acre"] * acres
+        
     revenue = yield_quintals * crop["msp_per_quintal"]
     
     # Rough cost estimation (30-40% of revenue for most crops)

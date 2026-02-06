@@ -38,6 +38,7 @@ class WaterWalletModel:
         self.water_balance_model = None
         self.solvency_model = None
         self.insolvency_day_model = None
+        self.yield_model = None
         self.training_metadata = None
         
         self._load_models()
@@ -56,6 +57,7 @@ class WaterWalletModel:
             ("water_balance", "water_balance_model"),
             ("solvency", "solvency_model"),
             ("insolvency_day", "insolvency_day_model"),
+            ("yield_predictor", "yield_model"),
         ]
         
         all_loaded = True
@@ -180,6 +182,24 @@ class WaterWalletModel:
         features = self._prepare_features(weather_data, groundwater_data, soil_data, crop_id)
         prediction = self.insolvency_day_model.predict(features)[0]
         return min(365, max(0, int(prediction)))
+    
+    def predict_yield(
+        self,
+        weather_data: dict,
+        groundwater_data: dict,
+        soil_data: dict,
+        crop_id: str
+    ) -> Optional[float]:
+        """
+        Predicts dynamic crop yield (quintals/acre) based on conditions.
+        Returns None if model is missing (triggers fallback).
+        """
+        if self.yield_model is None:
+            return None
+            
+        features = self._prepare_features(weather_data, groundwater_data, soil_data, crop_id)
+        prediction = self.yield_model.predict(features)[0]
+        return max(0, float(prediction))
     
     def _fallback_water_balance(
         self,
