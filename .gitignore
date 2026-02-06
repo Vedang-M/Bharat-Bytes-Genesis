@@ -20,6 +20,12 @@ env/
 ml/models/*.joblib
 ml/models/
 
+# Firebase (NEVER commit service account keys!)
+firebase-service-account.json
+*-service-account.json
+*.json.key
+
 # OS misc
 .DS_Store
 Thumbs.db
+

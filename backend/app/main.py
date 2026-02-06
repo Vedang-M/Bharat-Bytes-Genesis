@@ -14,7 +14,8 @@ from fastapi.middleware.cors import CORSMiddleware
 ml_path = Path(__file__).parent.parent.parent / "ml"
 sys.path.insert(0, str(ml_path.parent))
 
-from .routes import water_status, health, ml
+from .routes import water_status, health, ml, auth
+from .firebase_config import initialize_firebase
 
 
 
@@ -23,8 +24,16 @@ from .routes import water_status, health, ml
 async def lifespan(app: FastAPI):
     """
     Lifespan context manager for startup/shutdown events.
-    Pre-loads ML models on startup.
+    Pre-loads ML models and initializes Firebase on startup.
     """
+    # Startup: Initialize Firebase
+    print("Initializing Firebase...")
+    firebase_ok = initialize_firebase()
+    if firebase_ok:
+        print("Firebase initialized successfully!")
+    else:
+        print("Firebase not configured - running in development mode")
+    
     # Startup: Load ML models
     print("Loading ML models...")
     try:
@@ -52,6 +61,7 @@ app = FastAPI(
     - **Smart-Swap Recommendations**: Get alternative crops with better water efficiency
     - **Profit-Per-Drop Calculator**: Rank crops by financial return per liter of water
     - **Best Sowing Date**: Optimal planting date based on weather forecast
+    - **User Authentication**: Firebase-based auth with role support (farmer/sarpanch/admin)
     
     ### Data Sources
     - Weather: Visual Crossing API (15-day forecast)
@@ -75,3 +85,5 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(water_status.router)
 app.include_router(ml.router)
+app.include_router(auth.router)
+

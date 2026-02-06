@@ -79,5 +79,23 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173,
     allowedHosts: ['overweening-unmomentously-garfield.ngrok-free.dev'],
+    // Proxy API requests to backend
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/ml': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/health': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
 })

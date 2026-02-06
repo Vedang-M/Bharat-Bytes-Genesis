@@ -1,14 +1,18 @@
 import { useState } from "react";
-import { User, Phone } from "lucide-react";
-import { saveUserData } from "../utils/authUtils";
+import { User, Phone, Mail, Lock } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 import { getTranslations } from "../utils/languageUtils";
 
 const SignupPopup = ({ onClose, onSignupComplete, language = "hi" }) => {
+  const { signUp, isFirebaseConfigured } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
+    email: "",
+    password: "",
   });
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
   // Get translations based on selected language
   const t = getTranslations(language).signup;
@@ -28,20 +32,50 @@ const SignupPopup = ({ onClose, onSignupComplete, language = "hi" }) => {
       newErrors.phone = t.errors.phoneInvalid;
     }
 
+    // Email and password only required for Firebase mode
+    if (isFirebaseConfigured) {
+      if (!formData.email.trim()) {
+        newErrors.email = language === "hi" ? "ईमेल आवश्यक है" : "Email is required";
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        newErrors.email = language === "hi" ? "अमान्य ईमेल" : "Invalid email";
+      }
+
+      if (!formData.password || formData.password.length < 6) {
+        newErrors.password = language === "hi" ? "पासवर्ड कम से कम 6 अक्षर का होना चाहिए" : "Password must be at least 6 characters";
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
-    const success = saveUserData({ ...formData, language });
-    if (success) {
-      onSignupComplete();
-      onClose();
-    } else {
-      alert(t.alerts.saveFailed);
+    setIsLoading(true);
+
+    try {
+      const result = await signUp({
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email || `${formData.phone}@waterwallet.local`,
+        password: formData.password || formData.phone, // Use phone as password in demo mode
+        role: "farmer",
+        location: null, // Will be set from geolocation later
+      });
+
+      if (result.success) {
+        onSignupComplete();
+        onClose();
+      } else {
+        setErrors({ submit: result.error });
+      }
+    } catch (error) {
+      console.error("Signup error:", error);
+      setErrors({ submit: error.message || t.alerts?.saveFailed || "Signup failed" });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -70,7 +104,7 @@ const SignupPopup = ({ onClose, onSignupComplete, language = "hi" }) => {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* Name */}
           <div className="group">
             <label className="mb-1.5 ml-1 flex items-center gap-2 text-xl font-bold text-gray-800">
@@ -126,10 +160,76 @@ const SignupPopup = ({ onClose, onSignupComplete, language = "hi" }) => {
             )}
           </div>
 
+          {/* Email - Only show in Firebase mode */}
+          {isFirebaseConfigured && (
+            <div>
+              <label className="mb-1.5 ml-1 flex items-center gap-2 text-xl font-bold text-gray-800">
+                <Mail size={20} className="text-purple-700" />
+                {language === "hi" ? "ईमेल" : "Email"}
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder={language === "hi" ? "आपका ईमेल" : "Your email"}
+                className={`
+                  w-full rounded-2xl border bg-white/50
+                  px-4 py-3.5 text-base outline-none transition-all
+                  placeholder:text-gray-500
+                  ${errors.email ? "border-red-500 bg-red-50/30" : "border-white/60"}
+                  focus:border-white focus:bg-white/80 focus:ring-4 focus:ring-purple-500/10
+                `}
+              />
+              {errors.email && (
+                <p className="mt-1.5 ml-1 text-xs font-bold text-red-600">
+                  {errors.email}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Password - Only show in Firebase mode */}
+          {isFirebaseConfigured && (
+            <div>
+              <label className="mb-1.5 ml-1 flex items-center gap-2 text-xl font-bold text-gray-800">
+                <Lock size={20} className="text-orange-700" />
+                {language === "hi" ? "पासवर्ड" : "Password"}
+              </label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                placeholder={language === "hi" ? "पासवर्ड बनाएं" : "Create password"}
+                className={`
+                  w-full rounded-2xl border bg-white/50
+                  px-4 py-3.5 text-base outline-none transition-all
+                  placeholder:text-gray-500
+                  ${errors.password ? "border-red-500 bg-red-50/30" : "border-white/60"}
+                  focus:border-white focus:bg-white/80 focus:ring-4 focus:ring-orange-500/10
+                `}
+              />
+              {errors.password && (
+                <p className="mt-1.5 ml-1 text-xs font-bold text-red-600">
+                  {errors.password}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Submit Error */}
+          {errors.submit && (
+            <p className="text-center text-sm font-bold text-red-600 bg-red-50/50 rounded-xl p-3">
+              {errors.submit}
+            </p>
+          )}
+
           {/* Submit */}
           <button
             type="submit"
-            className="
+            disabled={isLoading}
+            className={`
               mt-4 w-full rounded-2xl
               bg-green-600/80 py-4
               text-lg font-bold text-white
@@ -137,9 +237,18 @@ const SignupPopup = ({ onClose, onSignupComplete, language = "hi" }) => {
               transition-all duration-300
               hover:bg-green-600 hover:shadow-green-900/40 hover:-translate-y-0.5
               active:scale-[0.98]
-            "
+              disabled:opacity-50 disabled:cursor-not-allowed
+              flex items-center justify-center gap-2
+            `}
           >
-            {t.submit}
+            {isLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                {language === "hi" ? "कृपया प्रतीक्षा करें..." : "Please wait..."}
+              </>
+            ) : (
+              t.submit
+            )}
           </button>
         </form>
       </div>

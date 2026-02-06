@@ -6,7 +6,7 @@ import {
   Navigate,
   useNavigate,
 } from "react-router-dom";
-import { isUserLoggedIn } from "./utils/authUtils";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { isLanguageSelected, getLanguage } from "./utils/languageUtils";
 import WelcomePopup from "./components/WelcomePopup";
 import LanguageSelectionPopup from "./components/LanguageSelectionPopup";
@@ -23,36 +23,58 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 
+/**
+ * Protected Route Component
+ * Redirects to home if not authenticated or doesn't have required role.
+ */
+function ProtectedRoute({ children, requiredRole = null }) {
+  const { isAuthenticated, hasRole, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#422B06]">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (requiredRole && !hasRole(requiredRole)) {
+    return <Navigate to="/water" replace />;
+  }
+
+  return children;
+}
+
 function AuthFlow() {
   const navigate = useNavigate();
+  const { isAuthenticated, loading } = useAuth();
   const [showWelcomePopup, setShowWelcomePopup] = useState(true);
   const [showLanguagePopup, setShowLanguagePopup] = useState(false);
   const [showSignupPopup, setShowSignupPopup] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState("hi");
 
   useEffect(() => {
-    // Check if user is already logged in
-    const loggedIn = isUserLoggedIn();
-    setIsLoggedIn(loggedIn);
-
     // Get saved language preference
     const savedLanguage = getLanguage();
     if (savedLanguage) {
       setSelectedLanguage(savedLanguage);
     }
 
-    // If user is logged in, redirect to water page
-    if (loggedIn) {
+    // If user is already logged in, redirect to water page
+    if (!loading && isAuthenticated) {
       navigate("/water");
     }
-  }, [navigate]);
+  }, [navigate, isAuthenticated, loading]);
 
   const handleWelcomeClose = () => {
     setShowWelcomePopup(false);
 
     // After welcome popup closes, check if user is logged in
-    if (!isLoggedIn) {
+    if (!isAuthenticated) {
       // Check if language is already selected
       if (isLanguageSelected()) {
         // Language already selected, go directly to signup
@@ -76,11 +98,19 @@ function AuthFlow() {
   };
 
   const handleSignupComplete = () => {
-    setIsLoggedIn(true);
     setShowSignupPopup(false);
     // Navigate to water status screen after signup
     navigate("/water");
   };
+
+  // Show loading spinner while checking auth
+  if (loading) {
+    return (
+      <div className="relative w-screen h-screen overflow-hidden font-hindi flex items-center justify-center bg-[#422B06]">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-screen h-screen overflow-hidden font-hindi">
@@ -91,12 +121,12 @@ function AuthFlow() {
       {showWelcomePopup && <WelcomePopup onClose={handleWelcomeClose} />}
 
       {/* Language Selection Popup - Shows after welcome if not logged in and language not selected */}
-      {showLanguagePopup && !isLoggedIn && (
+      {showLanguagePopup && !isAuthenticated && (
         <LanguageSelectionPopup onLanguageSelect={handleLanguageSelect} />
       )}
 
       {/* Signup Popup - Shows after language selection if user not logged in */}
-      {showSignupPopup && !isLoggedIn && (
+      {showSignupPopup && !isAuthenticated && (
         <SignupPopup
           onClose={handleSignupClose}
           onSignupComplete={handleSignupComplete}
@@ -107,42 +137,85 @@ function AuthFlow() {
   );
 }
 
+function AppRoutes() {
+  return (
+    <Routes>
+      {/* Auth flow route */}
+      <Route path="/" element={<AuthFlow />} />
+
+      {/* Main app routes with layout - Protected */}
+      <Route element={<AppLayout />}>
+        <Route
+          path="/water"
+          element={
+            <ProtectedRoute>
+              <WaterStatusScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/crops"
+          element={
+            <ProtectedRoute>
+              <CropSelect />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/advice"
+          element={
+            <ProtectedRoute>
+              <CropResult />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
+
+      {/* API Documentation route (no layout, no auth) */}
+      <Route path="/dev/api" element={<ApiDocumentation />} />
+
+      {/* Sarpanch Dashboard route - Requires sarpanch role */}
+      <Route
+        path="/authority/sarpanch"
+        element={
+          <ProtectedRoute requiredRole="sarpanch">
+            <SarpanchDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Redirect any unknown routes to home */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Auth flow route */}
-        <Route path="/" element={<AuthFlow />} />
-
-        {/* Main app routes with layout */}
-        <Route element={<AppLayout />}>
-          <Route path="/water" element={<WaterStatusScreen />} />
-          <Route path="/crops" element={<CropSelect />} />
-          <Route path="/advice" element={<CropResult />} />
-          <Route path="/profile" element={<ProfilePage />} />
-        </Route>
-
-        {/* API Documentation route (no layout) */}
-        <Route path="/dev/api" element={<ApiDocumentation />} />
-
-        {/* Sarpanch Dashboard route (no layout) */}
-        <Route path="/authority/sarpanch" element={<SarpanchDashboard />} />
-
-        {/* Redirect any unknown routes to home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="colored"
-      />
+      <AuthProvider>
+        <AppRoutes />
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="colored"
+        />
+      </AuthProvider>
     </BrowserRouter>
   );
 }

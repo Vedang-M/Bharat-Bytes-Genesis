@@ -1,31 +1,50 @@
 /**
  * Water Wallet API Client
  * Utility functions for integrating with the Water Wallet Backend API.
+ * Now with Firebase authentication support.
  */
 
-// API Base URL - Update this to your backend URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+import { getIdToken } from "../firebase/firebaseConfig";
+
+// API Base URL - In development, Vite proxy handles /api/* routes
+// In production, set VITE_API_URL to your backend URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
 /**
- * Generic fetch wrapper with error handling
+ * Get auth headers with Firebase ID token
  */
-async function apiFetch(endpoint, options = {}) {
+async function getAuthHeaders() {
+  const token = await getIdToken();
+  if (token) {
+    return { Authorization: `Bearer ${token}` };
+  }
+  return {};
+}
+
+/**
+ * Generic fetch wrapper with error handling and optional authentication
+ */
+async function apiFetch(endpoint, options = {}, requireAuth = false) {
   const url = `${API_BASE_URL}${endpoint}`;
-  
+
   try {
+    // Get auth headers if needed
+    const authHeaders = requireAuth ? await getAuthHeaders() : {};
+
     const response = await fetch(url, {
       headers: {
         "Content-Type": "application/json",
+        ...authHeaders,
         ...options.headers,
       },
       ...options,
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.detail || `API error: ${response.status}`);
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error(`API Error (${endpoint}):`, error);
@@ -34,21 +53,14 @@ async function apiFetch(endpoint, options = {}) {
 }
 
 /**
+ * Authenticated fetch - always includes auth token
+ */
+async function authenticatedFetch(endpoint, options = {}) {
+  return apiFetch(endpoint, options, true);
+}
+
+/**
  * Get water status for a location (GET - Simplified)
- * @param {number} latitude - Latitude of the location
- * @param {number} longitude - Longitude of the location
- * @returns {Promise<Object>} Water status data
- * 
- * Example response:
- * {
- *   water_balance_mm: 450,
- *   status: "limited", // "safe", "limited", or "critical"
- *   location: { state: "Uttar Pradesh", district: "Prayagraj", city: "Prayagraj" },
- *   solvency: { is_solvent: true, probability: 0.85, insolvency_in_days: null },
- *   safe_to_sow: true,
- *   weather_summary: { forecast_rainfall_mm: 120, forecast_et0_mm: 80, avg_temp_c: 28 },
- *   groundwater_category: "Semi-Critical"
- * }
  */
 export async function getWaterStatus(latitude, longitude) {
   return apiFetch(`/api/water-status?lat=${latitude}&lon=${longitude}`);
@@ -56,25 +68,6 @@ export async function getWaterStatus(latitude, longitude) {
 
 /**
  * Check if a crop is viable for a location (GET - Simplified)
- * @param {string} cropId - Crop identifier (e.g., 'wheat', 'sugarcane')
- * @param {number} latitude - Latitude
- * @param {number} longitude - Longitude
- * @param {number} [waterMm] - Optional: Available water in mm (if already known)
- * @returns {Promise<Object>} Crop viability data
- * 
- * Example response:
- * {
- *   crop_id: "wheat",
- *   crop_name: "Wheat",
- *   crop_name_hi: "गेहूं",
- *   is_viable: true,
- *   recommendation: "suitable", // "suitable", "caution", or "not-recommended"
- *   water_required_mm: 450,
- *   water_available_mm: 400,
- *   water_ratio: 0.89,
- *   message: "गेहूं के लिए पर्याप्त पानी उपलब्ध है।",
- *   message_en: "Sufficient water available for Wheat."
- * }
  */
 export async function checkCropViability(cropId, latitude, longitude, waterMm = null) {
   let url = `/api/crop-check/${cropId}?lat=${latitude}&lon=${longitude}`;
@@ -86,20 +79,6 @@ export async function checkCropViability(cropId, latitude, longitude, waterMm = 
 
 /**
  * Get alternative crop recommendations (Smart-Swap)
- * @param {string} rejectedCropId - The crop that was rejected
- * @param {number} waterMm - Available water in mm
- * @param {number} [maxResults=3] - Number of recommendations
- * @returns {Promise<Object>} Alternative crop recommendations
- * 
- * Example response:
- * {
- *   rejected_crop: "sugarcane",
- *   available_water_mm: 400,
- *   recommendations: [
- *     { crop_id: "wheat", crop_name: "Wheat", water_required_mm: 450, ... },
- *     { crop_id: "chickpea", crop_name: "Chickpea", water_required_mm: 300, ... }
- *   ]
- * }
  */
 export async function getSmartSwap(rejectedCropId, waterMm, maxResults = 3) {
   return apiFetch(`/api/smart-swap/${rejectedCropId}?water_mm=${waterMm}&max_results=${maxResults}`);
@@ -107,16 +86,6 @@ export async function getSmartSwap(rejectedCropId, waterMm, maxResults = 3) {
 
 /**
  * Get list of all supported crops
- * @returns {Promise<Object>} List of crops with water requirements
- * 
- * Example response:
- * {
- *   crops: [
- *     { id: "wheat", name_en: "Wheat", name_hi: "गेहूं", water_req_mm: 450, water_need_category: "medium" },
- *     { id: "sugarcane", name_en: "Sugarcane", name_hi: "गन्ना", water_req_mm: 1800, water_need_category: "high" },
- *     ...
- *   ]
- * }
  */
 export async function getCropsList() {
   return apiFetch("/api/crops");
@@ -124,7 +93,6 @@ export async function getCropsList() {
 
 /**
  * Get crops ranked by profit-per-drop
- * @returns {Promise<Object>} Profit ranking
  */
 export async function getProfitRanking() {
   return apiFetch("/api/profit-ranking");
@@ -132,10 +100,6 @@ export async function getProfitRanking() {
 
 /**
  * Get best sowing date for a crop at a location
- * @param {string} cropId - Crop identifier
- * @param {number} latitude - Latitude
- * @param {number} longitude - Longitude
- * @returns {Promise<Object>} Best sowing date recommendation
  */
 export async function getBestSowingDate(cropId, latitude, longitude) {
   return apiFetch("/api/best-sowing-date", {
@@ -150,13 +114,6 @@ export async function getBestSowingDate(cropId, latitude, longitude) {
 
 /**
  * Full water status request (POST version with all details)
- * @param {Object} params - Request parameters
- * @param {number} params.latitude - Latitude
- * @param {number} params.longitude - Longitude
- * @param {string} [params.state] - State name (optional, auto-detected)
- * @param {string} [params.district] - District name (optional, auto-detected)
- * @param {string} [params.block] - Block/Tehsil name (optional)
- * @returns {Promise<Object>} Full water status response
  */
 export async function getWaterStatusFull({ latitude, longitude, state, district, block }) {
   return apiFetch("/api/water-status", {
@@ -173,18 +130,88 @@ export async function getWaterStatusFull({ latitude, longitude, state, district,
 
 /**
  * Check API health
- * @returns {Promise<Object>} Health status
  */
 export async function checkHealth() {
   return apiFetch("/health");
 }
 
-// ============== Helper functions ==============
+// ==================== ML ENDPOINTS ====================
+
+/**
+ * Get groundwater forecast using Prophet model
+ */
+export async function getGroundwaterForecast(lat, lon, days = 30, soilData = {}) {
+  return apiFetch("/ml/groundwater/forecast", {
+    method: "POST",
+    body: JSON.stringify({
+      lat,
+      lon,
+      days,
+      ...soilData,
+    }),
+  });
+}
+
+/**
+ * Analyze crop viability using XGBoost
+ */
+export async function analyzeViability(params) {
+  return apiFetch("/ml/viability/analyze", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+}
+
+// ==================== AUTHENTICATED ENDPOINTS ====================
+
+/**
+ * Register user (after Firebase signup)
+ */
+export async function registerUser(userData) {
+  return authenticatedFetch("/api/auth/register", {
+    method: "POST",
+    body: JSON.stringify(userData),
+  });
+}
+
+/**
+ * Login and get user profile
+ */
+export async function loginUser(idToken) {
+  return apiFetch("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ id_token: idToken }),
+  });
+}
+
+/**
+ * Get current user profile (requires auth)
+ */
+export async function getUserProfile() {
+  return authenticatedFetch("/api/auth/profile");
+}
+
+/**
+ * Update user profile (requires auth)
+ */
+export async function updateUserProfile(updates) {
+  return authenticatedFetch("/api/auth/profile", {
+    method: "PUT",
+    body: JSON.stringify(updates),
+  });
+}
+
+/**
+ * Check auth status
+ */
+export async function checkAuthStatus() {
+  return authenticatedFetch("/api/auth/check");
+}
+
+// ==================== HELPER FUNCTIONS ====================
 
 /**
  * Map water status to UI display properties
- * @param {string} status - Status string ("safe", "limited", "critical")
- * @returns {Object} UI display properties
  */
 export function getStatusDisplayConfig(status) {
   const configs = {
@@ -207,14 +234,12 @@ export function getStatusDisplayConfig(status) {
       labelEn: "Critical",
     },
   };
-  
+
   return configs[status] || configs.limited;
 }
 
 /**
  * Map recommendation to UI display properties
- * @param {string} recommendation - Recommendation string
- * @returns {Object} UI display properties
  */
 export function getRecommendationDisplayConfig(recommendation) {
   const configs = {
@@ -237,7 +262,7 @@ export function getRecommendationDisplayConfig(recommendation) {
       labelEn: "Not Recommended",
     },
   };
-  
+
   return configs[recommendation] || configs.caution;
 }
 
@@ -250,6 +275,13 @@ export default {
   getBestSowingDate,
   getWaterStatusFull,
   checkHealth,
+  getGroundwaterForecast,
+  analyzeViability,
+  registerUser,
+  loginUser,
+  getUserProfile,
+  updateUserProfile,
+  checkAuthStatus,
   getStatusDisplayConfig,
   getRecommendationDisplayConfig,
 };
