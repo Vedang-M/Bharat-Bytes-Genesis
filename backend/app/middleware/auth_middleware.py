@@ -127,18 +127,23 @@ async def get_current_user(
     )
 
 
-def require_role(required_role: str):
+def require_role(*allowed_roles: str):
     """
-    Dependency that requires a specific role level.
+    Dependency that requires one of the allowed roles.
+    Checks Firebase Custom Claims in the JWT token.
     
     Usage:
         @router.get("/admin-only")
-        async def admin_endpoint(user: AuthenticatedUser = Depends(require_role("admin"))):
+        async def admin_endpoint(user_role: str = Depends(require_role("admin"))):
+            ...
+            
+        @router.get("/sarpanch-or-admin")
+        async def restricted_endpoint(user_role: str = Depends(require_role("sarpanch", "admin"))):
             ...
     """
     async def role_checker(
         credentials: HTTPAuthorizationCredentials = Depends(security)
-    ) -> AuthenticatedUser:
+    ) -> str:
         if not credentials:
             raise HTTPException(status_code=401, detail="Authorization header required")
         
@@ -148,35 +153,42 @@ def require_role(required_role: str):
         if not decoded:
             raise HTTPException(status_code=401, detail="Invalid or expired token")
         
-        # Get user role from Firestore
-        db = get_firestore_client()
-        user_role = "farmer"
-        user_data = {}
+        # Get role from Custom Claims (fallback to 'farmer' if not set)
+        user_role = decoded.get("role", "farmer")
         
-        if db:
-            try:
-                user_doc = db.collection(COLLECTIONS["users"]).document(decoded["uid"]).get()
-                if user_doc.exists:
-                    user_data = user_doc.to_dict()
-                    user_role = user_data.get("role", "farmer")
-            except Exception as e:
-                print(f"Error fetching user role: {e}")
+        # Determine if user has access based on role hierarchy
+        # Access Check:
+        # 1. Exact match in allowed_roles?
+        # 2. Or is user_role higher level than required?
         
-        user = AuthenticatedUser(
-            uid=decoded["uid"],
-            email=decoded.get("email"),
-            role=user_role,
-            name=user_data.get("name"),
-            phone=user_data.get("phone"),
-            location=user_data.get("location"),
-        )
+        # To simplify, we can check if user_role is in allowed_roles
+        # OR we can implement hierarchy check if a single minimum role is passed.
+        # The prompt asked for: require_role("farmer"|"sarpanch"|"admin")
         
-        if not user.has_role(required_role):
-            raise HTTPException(
+        # Let's support both explicit list AND hierarchy if single arg is passed
+        hierarchy = {"farmer": 0, "sarpanch": 1, "admin": 2}
+        user_level = hierarchy.get(user_role, 0)
+        
+        has_access = False
+        
+        if user_role in allowed_roles:
+            has_access = True
+            
+        # Hierarchy check if user has higher role than requested
+        # e.g. require_role("sarpanch") -> admin should also be allowed?
+        # Usually yes.
+        for required in allowed_roles:
+            req_level = hierarchy.get(required, 100)
+            if user_level >= req_level:
+                has_access = True
+                break
+                
+        if not has_access:
+             raise HTTPException(
                 status_code=403, 
-                detail=f"Access denied. Required role: {required_role}"
+                detail=f"Access denied. Required role: {allowed_roles}. Your role: {user_role}"
             )
         
-        return user
+        return user_role
     
     return role_checker

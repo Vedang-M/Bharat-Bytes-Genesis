@@ -56,8 +56,14 @@ export function AuthProvider({ children }) {
         }
 
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            setLoading(true);
             if (firebaseUser) {
+                // If user is already loaded and matches (e.g. token refresh), don't reload profile unnecessarily
+                if (user?.uid === firebaseUser.uid && userProfile) {
+                    setUser(firebaseUser); // Update auth object (could have fresher token)
+                    return;
+                }
+
+                setLoading(true);
                 setUser(firebaseUser);
                 // Fetch user profile from Firestore
                 await fetchUserProfile(firebaseUser.uid);
@@ -178,12 +184,14 @@ export function AuthProvider({ children }) {
 
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
-            // Update last login
-            await updateDoc(doc(db, "users", userCredential.user.uid), {
+            // Update last login (fire and forget)
+            updateDoc(doc(db, "users", userCredential.user.uid), {
                 lastLogin: serverTimestamp(),
-            });
+            }).catch(err => console.error("Error updating last login:", err));
 
-            await fetchUserProfile(userCredential.user.uid);
+            // Don't fetch profile here - onAuthStateChanged will handle it
+            // This prevents double fetching and race conditions
+
             return { success: true, user: userCredential.user };
         } catch (error) {
             console.error("Sign in error:", error);

@@ -8,7 +8,8 @@ import sys
 from pathlib import Path
 from datetime import datetime
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
+from ..middleware.auth_middleware import require_role
 
 # Add ml module to path
 ml_path = Path(__file__).parent.parent.parent.parent / "ml"
@@ -59,18 +60,11 @@ router = APIRouter(prefix="/api", tags=["Water Wallet"])
 async def get_water_status_simple(
     lat: float = Query(..., ge=-90, le=90, description="Latitude"),
     lon: float = Query(..., ge=-180, le=180, description="Longitude"),
+    role: str = Depends(require_role("farmer"))
 ):
     """
     Get water status using only lat/lon (simplified for frontend).
-    
-    This is the recommended endpoint for frontend integration.
-    State and district are auto-detected from coordinates.
-    
-    Returns:
-        - water_balance_mm: Available water in mm
-        - status: "safe", "limited", or "critical"
-        - location: Auto-detected location details
-        - solvency: Crop solvency prediction
+    Requires 'farmer' role or higher.
     """
     try:
         result = await get_water_status(lat, lon)
@@ -85,26 +79,11 @@ async def check_crop_simple(
     lat: float = Query(..., ge=-90, le=90, description="Latitude"),
     lon: float = Query(..., ge=-180, le=180, description="Longitude"),
     water_mm: Optional[float] = Query(None, description="Available water in mm (if already known)"),
+    role: str = Depends(require_role("farmer"))
 ):
     """
     Check if a crop is viable (simplified for frontend).
-    
-    This endpoint directly returns crop viability without requiring
-    state/district. Perfect for direct frontend integration.
-    
-    Args:
-        crop_id: Crop identifier (e.g., 'wheat', 'sugarcane', 'paddy')
-        lat: Latitude
-        lon: Longitude
-        water_mm: Optional - pass if water availability is already known
-    
-    Returns:
-        - is_viable: boolean
-        - recommendation: "suitable", "caution", or "not-recommended"
-        - water_required_mm: Water needed for crop
-        - water_available_mm: Available water
-        - message: Recommendation message in Hindi
-        - message_en: Recommendation message in English
+    Requires 'farmer' role or higher.
     """
     try:
         result = await check_crop_viability_for_location(
@@ -123,22 +102,11 @@ async def get_smart_swap(
     rejected_crop_id: str,
     water_mm: float = Query(..., gt=0, description="Available water in mm"),
     max_results: int = Query(3, ge=1, le=10, description="Number of recommendations"),
+    role: str = Depends(require_role("farmer"))
 ):
     """
     Get alternative crop recommendations (Smart-Swap).
-    
-    When a crop is rejected due to water constraints, this endpoint
-    suggests alternative crops that fit the water budget.
-    
-    Crops are ranked by profit-per-drop (financial efficiency).
-    
-    Args:
-        rejected_crop_id: The crop that was rejected
-        water_mm: Available water in mm
-        max_results: Number of recommendations to return
-    
-    Returns:
-        - recommendations: List of alternative crops with profit estimates
+    Requires 'farmer' role or higher.
     """
     try:
         result = await get_alternative_crops(
@@ -154,12 +122,13 @@ async def get_smart_swap(
 # ==================== FULL ENDPOINTS (WITH ALL PARAMETERS) ====================
 
 @router.post("/water-status", response_model=WaterStatusResponse)
-async def post_water_status(request: WaterStatusRequest):
+async def post_water_status(
+    request: WaterStatusRequest,
+    role: str = Depends(require_role("farmer"))
+):
     """
     Get water balance and solvency status for a location (POST version).
-    
-    Accepts full location details including state/district.
-    Use the GET endpoint for simpler frontend integration.
+    Requires 'farmer' role or higher.
     """
     try:
         result = await get_water_status(
@@ -192,11 +161,13 @@ async def post_water_status(request: WaterStatusRequest):
 
 
 @router.post("/crop-viability", response_model=CropViabilityResponse)
-async def check_crop_viability_endpoint(request: CropViabilityRequest):
+async def check_crop_viability_endpoint(
+    request: CropViabilityRequest,
+    role: str = Depends(require_role("farmer"))
+):
     """
     Check if a specific crop is viable for the given location (POST version).
-    
-    Returns viability status, recommendation, and best sowing date.
+    Requires 'farmer' role or higher.
     """
     try:
         # Get viability
@@ -228,11 +199,13 @@ async def check_crop_viability_endpoint(request: CropViabilityRequest):
 
 
 @router.post("/crop-alternatives", response_model=CropAlternativesResponse)
-async def get_crop_alternatives_endpoint(request: CropAlternativesRequest):
+async def get_crop_alternatives_endpoint(
+    request: CropAlternativesRequest,
+    role: str = Depends(require_role("farmer"))
+):
     """
     Get alternative crop recommendations when a crop is rejected.
-    
-    Returns Smart-Swap recommendations ranked by profit-per-drop.
+    Requires 'farmer' role or higher.
     """
     try:
         result = await get_alternative_crops(
@@ -260,9 +233,13 @@ async def get_crop_alternatives_endpoint(request: CropAlternativesRequest):
 
 
 @router.post("/best-sowing-date", response_model=BestSowingDateResponse)
-async def get_best_sowing_date_endpoint(request: BestSowingDateRequest):
+async def get_best_sowing_date_endpoint(
+    request: BestSowingDateRequest,
+    role: str = Depends(require_role("farmer"))
+):
     """
     Get the best sowing date based on weather forecast.
+    Requires 'farmer' role or higher.
     """
     try:
         if not ML_AVAILABLE:
@@ -292,9 +269,7 @@ async def get_best_sowing_date_endpoint(request: BestSowingDateRequest):
 @router.get("/crops")
 async def list_crops():
     """
-    List all supported crops with their water requirements.
-    
-    Use this to populate crop selection UI in frontend.
+    List all supported crops. Public endpoint (no auth required for listing).
     """
     if not ML_AVAILABLE or not CROP_DATABASE:
         # Return default crops if ML module not available
@@ -323,12 +298,10 @@ async def list_crops():
 
 
 @router.get("/profit-ranking")
-async def get_profit_ranking():
+async def get_profit_ranking(role: str = Depends(require_role("farmer"))):
     """
     Get all crops ranked by profit-per-drop.
-    
-    This helps farmers understand which crops give best returns
-    per liter of water consumed.
+    Requires 'farmer' role or higher.
     """
     if not ML_AVAILABLE:
         return {"ranking": [], "message": "ML module not available"}
@@ -346,11 +319,11 @@ async def get_profit_ranking():
 async def get_village_stats(
     state: str = Query(..., description="State name"),
     district: str = Query(..., description="District name"),
+    role: str = Depends(require_role("sarpanch"))
 ):
     """
     Get aggregated water statistics for a village/district.
-    
-    Used by Sarpanch dashboard to show village-level water budget.
+    Requires 'sarpanch' role or higher.
     """
     try:
         # Import db service
@@ -364,7 +337,6 @@ async def get_village_stats(
             stats = {"total_farmers": 0, "total_farms": 0, "predictions_today": 0}
         
         # Calculate water budget (simplified estimation)
-        # In production, aggregate from actual farm data
         total_demand_mm = 4200 + (stats.get("total_farms", 0) * 10)
         total_available_mm = 6800 - (stats.get("predictions_today", 0) * 5)
         utilization = int((total_demand_mm / total_available_mm) * 100) if total_available_mm > 0 else 100
@@ -403,11 +375,11 @@ async def create_notification(
     type: str = Query("info", description="Type: info, warning, critical"),
     state: Optional[str] = Query(None, description="Target state"),
     district: Optional[str] = Query(None, description="Target district"),
+    role: str = Depends(require_role("sarpanch"))
 ):
     """
     Create a notification for village farmers.
-    
-    Used by Sarpanch to broadcast important updates.
+    Requires 'sarpanch' role or higher.
     """
     try:
         from ..services.db_service import get_db_service
@@ -415,7 +387,7 @@ async def create_notification(
         
         if db_service.is_available():
             notification_id = await db_service.create_notification(
-                from_user_id="sarpanch",  # Would get from auth in production
+                from_user_id="sarpanch", 
                 message=message,
                 notification_type=type,
                 state=state,
@@ -442,9 +414,11 @@ async def get_notifications(
     state: Optional[str] = Query(None, description="Filter by state"),
     district: Optional[str] = Query(None, description="Filter by district"),
     limit: int = Query(20, ge=1, le=100, description="Max notifications to return"),
+    role: str = Depends(require_role("farmer"))
 ):
     """
     Get notifications for a location.
+    Requires 'farmer' role or higher.
     """
     try:
         from ..services.db_service import get_db_service

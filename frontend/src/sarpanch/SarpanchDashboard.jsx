@@ -37,7 +37,7 @@ ChartJS.register(
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const SarpanchDashboard = () => {
-  const { userProfile, getAuthToken } = useAuth();
+  const { userProfile, getAuthToken, logout } = useAuth();
   const [language, setLanguage] = useState("hi");
   const [notificationMsg, setNotificationMsg] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -294,13 +294,29 @@ const SarpanchDashboard = () => {
                 </p>
               </div>
             </div>
-            <button
-              onClick={fetchVillageData}
-              className="p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-all"
-              title={language === "hi" ? "रिफ्रेश करें" : "Refresh"}
-            >
-              <RefreshCw size={24} className="text-white" />
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={async () => {
+                  try {
+                    await logout();
+                    // Navigation handled by App.jsx useEffect
+                  } catch (err) {
+                    toast.error(language === "hi" ? "लॉगआउट विफल" : "Logout failed");
+                  }
+                }}
+                className="p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-all text-white/90 hover:text-white"
+                title={language === "hi" ? "लॉग आउट" : "Log Out"}
+              >
+                <span className="font-bold text-sm">{language === "hi" ? "बाहर जाएं" : "Logout"}</span>
+              </button>
+              <button
+                onClick={fetchVillageData}
+                className="p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-all"
+                title={language === "hi" ? "रिफ्रेश करें" : "Refresh"}
+              >
+                <RefreshCw size={24} className="text-white" />
+              </button>
+            </div>
           </div>
         </header>
 

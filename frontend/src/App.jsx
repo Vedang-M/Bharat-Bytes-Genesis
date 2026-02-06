@@ -18,6 +18,7 @@ import CropResult from "./components/CropResult";
 import ProfilePage from "./components/ProfilePage";
 import ApiDocumentation from "./components/ApiDocumentation";
 import SarpanchDashboard from "./sarpanch/SarpanchDashboard";
+import AdminDashboard from "./components/AdminDashboard";
 import AppLayout from "./components/AppLayout";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -51,7 +52,7 @@ function ProtectedRoute({ children, requiredRole = null }) {
 
 function AuthFlow() {
   const navigate = useNavigate();
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, hasRole } = useAuth();
   const [showWelcomePopup, setShowWelcomePopup] = useState(true);
   const [showLanguagePopup, setShowLanguagePopup] = useState(false);
   const [showSignupPopup, setShowSignupPopup] = useState(false);
@@ -64,11 +65,17 @@ function AuthFlow() {
       setSelectedLanguage(savedLanguage);
     }
 
-    // If user is already logged in, redirect to water page
+    // If user is already logged in, redirect based on role
     if (!loading && isAuthenticated) {
-      navigate("/water");
+      if (hasRole("admin")) {
+        navigate("/admin");
+      } else if (hasRole("sarpanch")) {
+        navigate("/authority/sarpanch");
+      } else {
+        navigate("/water");
+      }
     }
-  }, [navigate, isAuthenticated, loading]);
+  }, [navigate, isAuthenticated, loading, hasRole]);
 
   const handleWelcomeClose = () => {
     setShowWelcomePopup(false);
@@ -99,8 +106,7 @@ function AuthFlow() {
 
   const handleSignupComplete = () => {
     setShowSignupPopup(false);
-    // Navigate to water status screen after signup
-    navigate("/water");
+    // Navigation is handled by useEffect when isAuthenticated becomes true
   };
 
   // Show loading spinner while checking auth
@@ -188,6 +194,16 @@ function AppRoutes() {
         element={
           <ProtectedRoute requiredRole="sarpanch">
             <SarpanchDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Admin Dashboard route - Requires admin role */}
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminDashboard />
           </ProtectedRoute>
         }
       />

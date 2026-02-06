@@ -105,6 +105,26 @@ class DatabaseService:
         
         docs = query.stream()
         return [{"uid": doc.id, **doc.to_dict()} for doc in docs]
+
+    async def get_all_users(self, limit: int = 50) -> List[dict]:
+        """
+        Get all users with pagination limit.
+        Used for Admin Dashboard.
+        """
+        if not self.db:
+            return []
+        
+        # Order by creation time if available, otherwise just limit
+        try:
+            query = self.db.collection(COLLECTIONS["users"]).order_by(
+                "createdAt", direction="DESCENDING"
+            ).limit(limit)
+        except Exception:
+            # Fallback if index missing or createdAt missing
+            query = self.db.collection(COLLECTIONS["users"]).limit(limit)
+            
+        docs = query.stream()
+        return [{"uid": doc.id, **doc.to_dict()} for doc in docs]
     
     # ==================== FARM OPERATIONS ====================
     

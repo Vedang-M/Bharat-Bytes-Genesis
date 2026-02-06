@@ -9,7 +9,8 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 from datetime import datetime, timedelta
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from ..middleware.auth_middleware import require_role
 
 # Add ml module to path
 ml_path = Path(__file__).parent.parent.parent.parent / "ml"
@@ -62,9 +63,13 @@ def load_models():
              print(f"Error loading XGBoost models: {e}")
 
 @router.post("/groundwater/forecast", response_model=GroundwaterResponse)
-async def forecast_groundwater(req: GroundwaterRequest):
+async def forecast_groundwater(
+    req: GroundwaterRequest,
+    role: str = Depends(require_role("farmer"))
+):
     """
     Forecasting Groundwater Depth using Meta Prophet.
+    Requires 'farmer' role or higher.
     """
     load_models()
     model = MODELS["prophet"]
@@ -97,7 +102,7 @@ async def forecast_groundwater(req: GroundwaterRequest):
         clay = clay or 25
         sand = sand or 45
         ph = ph or 7.0
-
+    
     # Create future dataframe
     future = model.make_future_dataframe(periods=req.days, freq='D')
     
@@ -119,7 +124,7 @@ async def forecast_groundwater(req: GroundwaterRequest):
     for _, row in future_forecast.iterrows():
         trend = "Stable"
         if row['trend'] < -0.1: trend = "Rising Water Level" # Negative trend in depth = shallower = rising water? 
-        # Wait, Prophet predicts 'y'. Use dependent on training data.
+        # Wait, Prophet predicts 'y'. 
         # In training: depth = base + ... 
         # Higher depth = lower water level.
         # So Positive trend -> Increasing Depth -> Dropping Water Level.
@@ -140,10 +145,14 @@ async def forecast_groundwater(req: GroundwaterRequest):
     )
 
 @router.post("/viability/analyze", response_model=ViabilityResponse)
-async def analyze_viability(req: ViabilityRequest):
+async def analyze_viability(
+    req: ViabilityRequest,
+    role: str = Depends(require_role("farmer"))
+):
     """
     Analyze Crop Viability using XGBoost Ensemble.
     Inputs: Raw feature vector.
+    Requires 'farmer' role or higher.
     """
     load_models()
     wb_model = MODELS["xgboost"].get("water_balance")

@@ -1,12 +1,9 @@
-"""
-Authentication Routes
-User registration, login, and profile management.
-"""
-
+import os
 from datetime import datetime
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, EmailStr, Field
+from firebase_admin import auth
 
 from ..firebase_config import get_auth, verify_firebase_token, get_firestore_client, COLLECTIONS
 from ..middleware.auth_middleware import get_current_user, get_current_user_optional, AuthenticatedUser
@@ -25,6 +22,11 @@ class RegisterRequest(BaseModel):
     role: str = Field(default="farmer", pattern="^(farmer|sarpanch|admin)$")
     location: Optional[dict] = Field(default=None, description="User location {lat, lon, state, district, block}")
     firebase_uid: str = Field(..., description="Firebase Auth UID from client")
+
+class AssignRoleRequest(BaseModel):
+    """Request to manually assign a role."""
+    uid: str
+    role: str = Field(..., pattern="^(farmer|sarpanch|admin)$")
 
 
 class LoginRequest(BaseModel):
@@ -78,6 +80,37 @@ async def register_user(request: RegisterRequest):
     existing = await db_service.get_user(request.firebase_uid)
     if existing:
         raise HTTPException(status_code=400, detail="User already registered")
+
+    # Secure Role Validation
+    final_role = "farmer" # Default safest role
+    
+    # Parse authorized emails
+    admin_emails = [e.strip() for e in os.getenv("AUTHORIZED_ADMIN_EMAILS", "").split(",") if e.strip()]
+    sarpanch_emails = [e.strip() for e in os.getenv("AUTHORIZED_SARPANCH_EMAILS", "").split(",") if e.strip()]
+    
+    if request.role == "admin":
+        if request.email and request.email in admin_emails:
+            final_role = "admin"
+        else:
+            final_role = "farmer" # Fallback if unauthorized
+        
+    elif request.role == "sarpanch":
+        if request.email and request.email in sarpanch_emails:
+            final_role = "sarpanch"
+        else:
+            final_role = "farmer" # Fallback if unauthorized
+            
+    else:
+        final_role = "farmer"
+
+    # Set Firebase Custom Claims for Role (if not farmer)
+    if final_role != "farmer":
+        try:
+            auth.set_custom_user_claims(request.firebase_uid, {'role': final_role})
+            print(f"Set custom claim role='{final_role}' for user {request.email}")
+        except Exception as e:
+            print(f"Error setting custom claims: {e}")
+            # Continue anyway, we still store role in Firestore
     
     # Create user document
     user_data = await db_service.create_user(
@@ -86,7 +119,7 @@ async def register_user(request: RegisterRequest):
             "name": request.name,
             "phone": request.phone,
             "email": request.email,
-            "role": request.role,
+            "role": final_role,
             "location": request.location or {},
         }
     )
@@ -236,3 +269,42 @@ async def check_auth(user: AuthenticatedUser = Depends(get_current_user_optional
             }
         }
     return {"authenticated": False, "user": None}
+
+
+@router.post("/assign-role")
+async def assign_role(
+    request: AssignRoleRequest,
+    current_user: AuthenticatedUser = Depends(get_current_user)
+):
+    """
+    Admin-only endpoint to manually assign roles.
+    Updates both Firestore and Firebase Auth Custom Claims.
+    """
+    # 1. Verify caller is Admin
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Permission denied. Admin access required.")
+
+    db_service = get_db_service()
+    
+    # 2. Update Firestore
+    try:
+        updated_user = await db_service.update_user(request.uid, {"role": request.role})
+        if not updated_user:
+            raise HTTPException(status_code=404, detail="User not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Firestore update failed: {str(e)}")
+
+    # 3. Update Firebase Custom Claims
+    try:
+        # If role is 'farmer', we can remove the claim or set it to farmer.
+        # Setting explicitly is safer.
+        auth.set_custom_user_claims(request.uid, {'role': request.role})
+    except Exception as e:
+        print(f"Error setting custom claims: {e}")
+        # We don't fail the request here, but we should log it
+        
+    return {
+        "success": True, 
+        "message": f"Role '{request.role}' assigned to user {request.uid}",
+        "user": updated_user
+    }

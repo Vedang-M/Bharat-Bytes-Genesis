@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Droplet, Sprout, FileText, User } from "lucide-react";
+import { Droplet, Sprout, FileText, User, Shield } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 import { getLanguage } from "../utils/languageUtils";
 
 const Navigation = () => {
@@ -23,6 +24,7 @@ const Navigation = () => {
     if (path === "/crops") return "crops";
     if (path === "/advice") return "advice";
     if (path === "/profile") return "profile";
+    if (path === "/admin") return "admin";
     return "water";
   };
 
@@ -59,6 +61,29 @@ const Navigation = () => {
     },
   ];
 
+  // Add Sarpanch Dashboard if user has role
+  const { hasRole } = useAuth(); // We need to import useAuth
+  if (hasRole("sarpanch")) {
+    navItems.splice(1, 0, { // Insert after Water
+      id: "dashboard",
+      icon: Sprout, // Using Sprout as placeholder, maybe change to Landmark/LayoutDashboard
+      labelHi: "डैशबोर्ड",
+      labelEn: "Dashboard",
+      path: "/authority/sarpanch",
+    });
+  }
+
+  // Add Admin Dashboard if user is admin
+  if (hasRole("admin")) {
+    navItems.push({
+      id: "admin",
+      icon: Shield,
+      labelHi: "एडमिन",
+      labelEn: "Admin",
+      path: "/admin",
+    });
+  }
+
   const handleNavClick = (path) => {
     navigate(path);
   };
@@ -93,10 +118,9 @@ const Navigation = () => {
                       className={`
                         flex items-center gap-2 px-6 py-2.5 rounded-full
                         transition-all duration-300
-                        ${
-                          isActive
-                            ? "bg-white/40 text-white shadow-lg"
-                            : "text-white/70 hover:bg-white/20 hover:text-white"
+                        ${isActive
+                          ? "bg-white/40 text-white shadow-lg"
+                          : "text-white/70 hover:bg-white/20 hover:text-white"
                         }
                       `}
                     >
@@ -129,21 +153,19 @@ const Navigation = () => {
                     className={`
                       flex flex-col items-center gap-1.5 px-4 py-2 rounded-2xl
                       transition-all duration-300 min-w-[70px]
-                      ${
-                        isActive
-                          ? "bg-white/40 shadow-lg scale-105"
-                          : "hover:bg-white/20"
+                      ${isActive
+                        ? "bg-white/40 shadow-lg scale-105"
+                        : "hover:bg-white/20"
                       }
                     `}
                   >
                     <div
                       className={`
                       p-2 rounded-xl transition-all
-                      ${
-                        isActive
+                      ${isActive
                           ? "bg-gradient-to-br from-[#2E7D32] to-[#43A047] text-white"
                           : "text-white/80"
-                      }
+                        }
                     `}
                     >
                       <Icon size={22} strokeWidth={2.5} />
