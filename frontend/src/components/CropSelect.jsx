@@ -161,7 +161,7 @@ const CropSelect = () => {
                   <img
                     src={crop.image}
                     alt={crop.name}
-                    className={`w-20 h-20 md:w-28 md:h-28 object-contain drop-shadow-2xl transition-transform duration-500 
+                    className={`w-24 h-24 md:w-28 md:h-28 object-contain drop-shadow-2xl transition-transform duration-500 
                       ${isSelected ? "scale-110" : "group-hover:scale-105"}`}
                   />
                   {isSelected && (

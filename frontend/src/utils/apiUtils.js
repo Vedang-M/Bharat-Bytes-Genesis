@@ -93,6 +93,22 @@ export async function getCropsList() {
 }
 
 /**
+ * Get fertilizer advertisements based on crop, region, and season
+ * @param {string} crop - Target crop ID (e.g., "wheat", "rice")
+ * @param {string} region - Target region/state (e.g., "Maharashtra")
+ * @param {string} season - Target season ("kharif", "rabi", "zaid")
+ * @returns {Promise<{ads: Array, count: number, filters_applied: object}>}
+ */
+export async function getFertilizerAds(crop, region, season = "kharif") {
+  const params = new URLSearchParams();
+  if (crop) params.append("crop", crop);
+  if (region) params.append("region", region);
+  if (season) params.append("season", season);
+  
+  return apiFetch(`/api/ads?${params.toString()}`);
+}
+
+/**
  * Get crops ranked by profit-per-drop
  */
 export async function getProfitRanking() {
@@ -272,6 +288,7 @@ export default {
   checkCropViability,
   getSmartSwap,
   getCropsList,
+  getFertilizerAds,
   getProfitRanking,
   getBestSowingDate,
   getWaterStatusFull,

@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { getTranslations, getLanguage } from "../utils/languageUtils";
 import { checkCropViability, getSmartSwap } from "../utils/apiUtils";
 import { getSavedLocation } from "../utils/locationUtils";
+import FertilizerAd from "./FertilizerAd";
 
 const CropResult = ({ selectedCrop: propSelectedCrop }) => {
   const navigate = useNavigate();
@@ -243,7 +244,7 @@ const CropResult = ({ selectedCrop: propSelectedCrop }) => {
                 <img
                   src={cropData.image}
                   alt={cropData.name}
-                  className="w-24 h-24 md:w-32 md:h-32 object-contain drop-shadow-2xl relative z-10"
+                  className="w-24 h-24 md:w-28 md:h-28 object-contain drop-shadow-2xl relative z-10"
                 />
                 {/* Subtle glow behind image */}
                 <div className="absolute inset-0 bg-white/20 blur-2xl -z-10 rounded-full" />
@@ -340,6 +341,13 @@ const CropResult = ({ selectedCrop: propSelectedCrop }) => {
               ))}
             </ul>
           </div>
+
+          {/* Fertilizer Ad - Government Approved */}
+          <FertilizerAd 
+            crop={cropData.id} 
+            region={getSavedLocation()?.state || getSavedLocation()?.district}
+            language={language}
+          />
         </div>
       </div>
     </div>
