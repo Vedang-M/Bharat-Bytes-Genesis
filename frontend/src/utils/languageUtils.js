@@ -65,15 +65,11 @@ export const translations = {
       namePlaceholder: "Enter your name",
       phone: "Phone Number",
       phonePlaceholder: "10 digit number",
-      location: "Pincode / Location",
-      locationPlaceholder: "Pincode or address",
-      locationButton: "Location",
       submit: "Sign Up",
       errors: {
         nameRequired: "Name is required",
         phoneRequired: "Phone number is required",
         phoneInvalid: "Please enter a valid 10-digit phone number",
-        locationRequired: "Location is required",
       },
       alerts: {
         saveFailed: "Failed to save user data. Please try again.",
@@ -85,6 +81,8 @@ export const translations = {
       location: "Location",
       availableWater: "Available Water",
       unit: "mm",
+      fetchLocation: "Fetch Current Location",
+      fetchingLocation: "Fetching...",
       status: {
         safe: "Safe",
         limited: "Limited",
@@ -103,7 +101,6 @@ export const translations = {
       title: "My Profile",
       name: "Name",
       phone: "Phone Number",
-      location: "Location",
       registeredOn: "Registered On",
       edit: "Edit Profile",
       save: "Save Changes",
@@ -116,7 +113,6 @@ export const translations = {
         nameRequired: "Name is required",
         phoneRequired: "Phone number is required",
         phoneInvalid: "Please enter a valid 10-digit phone number",
-        locationRequired: "Location is required",
       },
     },
     // Crops Page
@@ -192,15 +188,11 @@ export const translations = {
       namePlaceholder: "अपना नाम दर्ज करें",
       phone: "फोन नंबर",
       phonePlaceholder: "10 अंकों का नंबर",
-      location: "पिनकोड / स्थान",
-      locationPlaceholder: "पिनकोड या पता",
-      locationButton: "स्थान",
       submit: "साइन अप करें",
       errors: {
         nameRequired: "नाम आवश्यक है",
         phoneRequired: "फोन नंबर आवश्यक है",
         phoneInvalid: "कृपया 10 अंकों का फोन नंबर दर्ज करें",
-        locationRequired: "स्थान आवश्यक है",
       },
       alerts: {
         saveFailed: "उपयोगकर्ता डेटा सहेजने में विफल। कृपया पुनः प्रयास करें।",
@@ -212,6 +204,8 @@ export const translations = {
       location: "स्थान",
       availableWater: "उपलब्ध पानी",
       unit: "मिमी",
+      fetchLocation: "वर्तमान स्थान प्राप्त करें",
+      fetchingLocation: "प्राप्त कर रहे हैं...",
       status: {
         safe: "सुरक्षित",
         limited: "सीमित",
@@ -229,7 +223,6 @@ export const translations = {
       title: "मेरी प्रोफाइल",
       name: "नाम",
       phone: "फोन नंबर",
-      location: "स्थान",
       registeredOn: "पंजीकृत",
       edit: "संपादित करें",
       save: "सहेजें",
@@ -242,7 +235,6 @@ export const translations = {
         nameRequired: "नाम आवश्यक है",
         phoneRequired: "फोन नंबर आवश्यक है",
         phoneInvalid: "कृपया 10 अंकों का फोन नंबर दर्ज करें",
-        locationRequired: "स्थान आवश्यक है",
       },
     },
     // Crops Page

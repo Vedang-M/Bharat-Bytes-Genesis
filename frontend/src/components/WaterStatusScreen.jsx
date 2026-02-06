@@ -5,16 +5,22 @@ import {
   Info,
   AlertTriangle,
   CheckCircle,
+  MapPinned,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getTranslations, getLanguage } from "../utils/languageUtils";
-import { getSavedLocation } from "../utils/locationUtils";
+import {
+  getSavedLocation,
+  getUserLocation,
+  formatLocation,
+} from "../utils/locationUtils";
 
 const WaterStatusScreen = () => {
   const navigate = useNavigate();
   const [currentLanguage, setCurrentLanguage] = useState("hi");
-  const userLocation = getSavedLocation();
+  const [userLocation, setUserLocation] = useState(getSavedLocation());
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
   // Read language from localStorage on mount and when it changes
   useEffect(() => {
@@ -26,16 +32,29 @@ const WaterStatusScreen = () => {
 
   const t = getTranslations(currentLanguage).waterStatus;
 
-  // Get user's location from localStorage
-const locationDisplay = userLocation
-  ? {
-      city: userLocation.city ?? userLocation.district ?? "—",
-      state: userLocation.state ?? "—",
+  // Handle location fetching
+  const handleFetchLocation = async () => {
+    setIsLoadingLocation(true);
+    try {
+      const locationData = await getUserLocation();
+      setUserLocation(locationData);
+    } catch (error) {
+      alert(error.message || "Unable to get location. Please try again.");
+    } finally {
+      setIsLoadingLocation(false);
     }
-  : {
-      city: "—",
-      state: "—",
-    };
+  };
+
+  // Get user's location from state
+  const locationDisplay = userLocation
+    ? {
+        city: userLocation.city ?? userLocation.district ?? "—",
+        state: userLocation.state ?? "—",
+      }
+    : {
+        city: "—",
+        state: "—",
+      };
 
   const MAX_WATER_CAPACITY = 1000;
   const waterData = {
@@ -110,15 +129,32 @@ const locationDisplay = userLocation
         <header
           className={`flex justify-between items-center ${glassPillClass} p-5 rounded-[2.5rem] flex-shrink-0`}
         >
-          <div className="flex flex-col justify-center">
+          <div className="flex flex-col justify-center flex-1">
             <span className="text-xs font-bold text-white/70 uppercase tracking-wider mb-0.5">
               {t.header}
             </span>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <MapPin size={18} className="text-[#A5D6A7]" />
               <h2 className="text-lg font-black text-white drop-shadow-sm leading-none pb-0.5">
                 {waterData.location.city}, {waterData.location.state}
               </h2>
+              <button
+                onClick={handleFetchLocation}
+                disabled={isLoadingLocation}
+                className="
+                  ml-2 flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                  bg-white/20 hover:bg-white/30 border border-white/30
+                  text-xs font-bold text-white
+                  transition-all active:scale-95
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                "
+              >
+                <MapPinned size={14} />
+                {isLoadingLocation ? t.fetchingLocation : t.fetchLocation}
+                {isLoadingLocation && (
+                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                )}
+              </button>
             </div>
           </div>
           <div

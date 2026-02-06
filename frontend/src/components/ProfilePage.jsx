@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import {
   User,
   Phone,
-  MapPin,
   Calendar,
   Edit2,
   Save,
@@ -20,23 +19,6 @@ import {
   getLanguage,
 } from "../utils/languageUtils";
 
-// Helper function to format location for display
-const formatLocationDisplay = (location) => {
-  if (!location) return "";
-
-  // If location is a string, return it as is (legacy format)
-  if (typeof location === "string") return location;
-
-  // If location is an object, format it as "City, State"
-  if (typeof location === "object") {
-    const city = location.city || location.district || "";
-    const state = location.state || "";
-    return [city, state].filter(Boolean).join(", ");
-  }
-
-  return "";
-};
-
 const ProfilePage = () => {
   const navigate = useNavigate();
   const [userData, setUserData] = useState(null);
@@ -44,7 +26,6 @@ const ProfilePage = () => {
   const [editedData, setEditedData] = useState({
     name: "",
     phone: "",
-    location: "",
   });
   const [errors, setErrors] = useState({});
   const [currentLanguage, setCurrentLanguage] = useState("hi");
@@ -61,7 +42,6 @@ const ProfilePage = () => {
     title: currentLanguage === "hi" ? "मेरी प्रोफाइल" : "My Profile",
     name: currentLanguage === "hi" ? "नाम" : "Name",
     phone: currentLanguage === "hi" ? "फोन नंबर" : "Phone Number",
-    location: currentLanguage === "hi" ? "स्थान" : "Location",
     registeredOn: currentLanguage === "hi" ? "पंजीकृत" : "Registered On",
     edit: currentLanguage === "hi" ? "संपादित करें" : "Edit Profile",
     save: currentLanguage === "hi" ? "सहेजें" : "Save Changes",
@@ -78,8 +58,6 @@ const ProfilePage = () => {
         currentLanguage === "hi" ? "नाम आवश्यक है" : "Name is required",
       phoneInvalid:
         currentLanguage === "hi" ? "10 अंक दर्ज करें" : "Enter 10 digits",
-      locationRequired:
-        currentLanguage === "hi" ? "स्थान आवश्यक है" : "Location required",
     },
   };
 
@@ -90,7 +68,6 @@ const ProfilePage = () => {
       setEditedData({
         name: data.name || "",
         phone: data.phone || "",
-        location: data.location || "",
       });
     }
   }, []);
@@ -176,10 +153,6 @@ const ProfilePage = () => {
               <h1 className="text-3xl font-black text-white drop-shadow-md mb-2 tracking-tight">
                 {userData.name}
               </h1>
-              <p className="text-white/80 font-bold flex items-center gap-2 bg-white/10 px-4 py-1.5 rounded-full border border-white/5 backdrop-blur-md">
-                <MapPin size={16} className="text-[#A5D6A7]" />{" "}
-                {formatLocationDisplay(userData.location)}
-              </p>
 
               {!isEditing && (
                 <button
@@ -265,27 +238,6 @@ const ProfilePage = () => {
                     <div className="px-1 py-2 border-b border-white/10">
                       <p className="text-2xl font-black text-white drop-shadow-sm">
                         {userData.phone}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Field: Location */}
-                <div className="space-y-3">
-                  <label className="text-xs font-black text-white/70 uppercase tracking-widest flex items-center gap-2 ml-1">
-                    <MapPin size={14} /> {t.location}
-                  </label>
-                  {isEditing ? (
-                    <input
-                      name="location"
-                      value={editedData.location}
-                      onChange={handleInputChange}
-                      className={`w-full ${glassInputClass} rounded-2xl px-5 py-4 font-bold outline-none transition-all`}
-                    />
-                  ) : (
-                    <div className="px-1 py-2 border-b border-white/10">
-                      <p className="text-2xl font-black text-white drop-shadow-sm">
-                        {formatLocationDisplay(userData.location)}
                       </p>
                     </div>
                   )}

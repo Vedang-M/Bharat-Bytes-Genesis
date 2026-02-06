@@ -59,13 +59,25 @@ export const getCurrentPosition = () => {
  */
 export const reverseGeocode = async (latitude, longitude) => {
   try {
+    const nominatimUrl =
+      `https://nominatim.openstreetmap.org/reverse` +
+      `?format=json` +
+      `&lat=${latitude}` +
+      `&lon=${longitude}` +
+      `&zoom=18` +
+      `&addressdetails=1` +
+      `&accept-language=en`; // 👈 KEY FIX
+
+    const corsProxy = "https://corsproxy.io/?";
+
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+      `${corsProxy}${encodeURIComponent(nominatimUrl)}`,
       {
         headers: {
-          "User-Agent": "KisanSetu-App/1.0", // Required by Nominatim usage policy
+          "User-Agent": "KisanSetu-App/1.0",
+          "Accept-Language": "en",
         },
-      },
+      }
     );
 
     if (!response.ok) {
@@ -73,19 +85,8 @@ export const reverseGeocode = async (latitude, longitude) => {
     }
 
     const data = await response.json();
+    const address = data.address || {};
 
-    // Debug: Log the full API response
-    console.log("🌍 Nominatim API Response:", data);
-    console.log("📋 Address components:", data.address);
-
-    if (!data || !data.address) {
-      throw new Error("Invalid location data received");
-    }
-
-    // Extract relevant address components with better fallbacks
-    const address = data.address;
-
-    // Try to get city with multiple fallbacks
     const city =
       address.city ||
       address.town ||
@@ -96,37 +97,26 @@ export const reverseGeocode = async (latitude, longitude) => {
       address.state_district ||
       "";
 
-    const locationData = {
+    return {
       area:
         address.suburb ||
         address.neighbourhood ||
         address.hamlet ||
         address.village ||
         "",
-      city: city,
-      state: address.state || address.region || "",
-      country: address.country || "",
+      city,
+      state: address.state || "",
       district: address.state_district || address.county || city || "",
+      country: address.country || "",
       fullAddress: data.display_name || "",
-      raw: address, // Keep raw data for debugging
+      raw: address,
     };
-
-    // Debug logging
-    console.log("📍 Location extracted:", {
-      city: locationData.city,
-      state: locationData.state,
-      district: locationData.district,
-      area: locationData.area,
-      fullAddress: locationData.fullAddress,
-    });
-    console.log("✅ Complete location object:", locationData);
-
-    return locationData;
   } catch (error) {
     console.error("Reverse geocoding error:", error);
     throw error;
   }
 };
+
 
 /**
  * Get user location (coordinates + address)
@@ -179,7 +169,7 @@ export const saveLocation = (locationData) => {
 export const getSavedLocation = () => {
   try {
     const saved = localStorage.getItem(LOCATION_STORAGE_KEY);
-    console.log("Location in location util file: ", saved)
+    console.log("Location in location util file: ", saved);
     return saved ? JSON.parse(saved) : null;
   } catch (error) {
     console.error("Error reading saved location:", error);
