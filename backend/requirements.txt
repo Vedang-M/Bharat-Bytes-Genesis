@@ -1,6 +1,15 @@
+<<<<<<< HEAD
 fastapi
 uvicorn
 sqlmodel
 sqlalchemy
 pydantic[email]
 email-validator
+=======
+requests
+scikit-learn
+numpy
+fastapi
+uvicorn
+python-multipart
+>>>>>>> b5850d5de06975b76057f3da7d0eabcb36757025
