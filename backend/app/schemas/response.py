@@ -61,15 +61,14 @@ class WaterStatusResponse(BaseModel):
 
 
 class WaterStatusSimpleResponse(BaseModel):
-    """Simplified response for water status (frontend-friendly)."""
-    water_balance_mm: float = Field(..., description="Available water in mm")
-    status: str = Field(..., description="safe, limited, or critical")
-    location: dict
-    solvency: dict
-    safe_to_sow: bool
-    weather_summary: dict
-    groundwater_category: str
-    timestamp: str
+    """Simplified response for water status GET endpoint (frontend-friendly)."""
+    location: str = Field(..., description="Human-readable location name")
+    latitude: float
+    longitude: float
+    water_level_mm: float = Field(..., description="Available water in mm")
+    status: str = Field(..., description="CRITICAL, LOW, MODERATE, or GOOD")
+    last_updated_at: datetime
+    data_source: str
 
 
 class CropViabilityResponse(BaseModel):

@@ -41,6 +41,7 @@ from ..schemas.request import (
 )
 from ..schemas.response import (
     WaterStatusResponse,
+    WaterStatusSimpleResponse,
     CropViabilityResponse,
     CropAlternativesResponse,
     BestSowingDateResponse,
@@ -56,7 +57,7 @@ router = APIRouter(prefix="/api", tags=["Water Wallet"])
 
 # ==================== SIMPLIFIED ENDPOINTS FOR FRONTEND ====================
 
-@router.get("/water-status")
+@router.get("/water-status", response_model=WaterStatusSimpleResponse)
 async def get_water_status_simple(
     lat: float = Query(..., ge=-90, le=90, description="Latitude"),
     lon: float = Query(..., ge=-180, le=180, description="Longitude"),
@@ -64,13 +65,72 @@ async def get_water_status_simple(
 ):
     """
     Get water status using only lat/lon (simplified for frontend).
+    
+    Returns a production-ready response with:
+    - Location name (human readable)
+    - Water level in mm
+    - Status: CRITICAL, LOW, MODERATE, or GOOD
+    - Timestamp and data source
+    
     Requires 'farmer' role or higher.
     """
+    from datetime import datetime
+    
     try:
         result = await get_water_status(lat, lon)
-        return result
+        
+        # Extract water balance - handle NumPy types
+        water_level = result.get("water_balance_mm", 0)
+        if hasattr(water_level, 'item'):
+            water_level = water_level.item()  # Convert numpy scalar
+        water_level = float(water_level)
+        
+        # Map internal status to user-friendly status
+        internal_status = result.get("status", "limited")
+        if internal_status == "safe" or water_level >= 600:
+            status = "GOOD"
+        elif internal_status == "limited" or water_level >= 300:
+            status = "MODERATE"
+        elif water_level >= 100:
+            status = "LOW"
+        else:
+            status = "CRITICAL"
+        
+        # Build location string
+        loc = result.get("location", {})
+        location_parts = []
+        if loc.get("city"):
+            location_parts.append(loc["city"])
+        if loc.get("district"):
+            location_parts.append(loc["district"])
+        if loc.get("state"):
+            location_parts.append(loc["state"])
+        location_str = ", ".join(location_parts) if location_parts else f"{lat}, {lon}"
+        
+        # Build data source string
+        sources = result.get("data_sources", {})
+        source_parts = []
+        for key, val in sources.items():
+            if val and "Fallback" not in val:
+                source_parts.append(key.title())
+        data_source = ", ".join(source_parts) if source_parts else "Estimated Data"
+        
+        return WaterStatusSimpleResponse(
+            location=location_str,
+            latitude=float(lat),
+            longitude=float(lon),
+            water_level_mm=water_level,
+            status=status,
+            last_updated_at=datetime.utcnow(),
+            data_source=data_source,
+        )
+        
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=f"Invalid coordinates: {str(ve)}")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # Log the error for debugging
+        print(f"Water status error for ({lat}, {lon}): {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch water status: {str(e)}")
 
 
 @router.get("/crop-check/{crop_id}")

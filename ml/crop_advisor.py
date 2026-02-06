@@ -108,6 +108,8 @@ def get_smart_swap_recommendations(
     # For now, we will use static profit in this sync function to avoid breaking changes
     # The dynamic profit will be calculated in the API route which has access to context
     
+    recommendations = []
+    
     for crop_id, crop in CROP_DATABASE.items():
         if crop_id == rejected_crop_id:
             continue

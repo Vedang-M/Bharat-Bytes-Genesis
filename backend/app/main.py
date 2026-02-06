@@ -17,17 +17,6 @@ sys.path.insert(0, str(ml_path.parent))
 from .routes import water_status, health, ml, auth, admin
 from .firebase_config import initialize_firebase
 
-# ... (lines 20-84 omitted) ...
-
-# Include routers
-app.include_router(health.router)
-app.include_router(water_status.router)
-app.include_router(ml.router)
-app.include_router(auth.router)
-app.include_router(admin.router)
-
-
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -95,4 +84,4 @@ app.include_router(health.router)
 app.include_router(water_status.router)
 app.include_router(ml.router)
 app.include_router(auth.router)
-
+app.include_router(admin.router)

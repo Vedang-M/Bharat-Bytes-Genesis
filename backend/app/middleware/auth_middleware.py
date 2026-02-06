@@ -3,6 +3,7 @@ Authentication Middleware
 JWT token verification and role-based access control.
 """
 
+import os
 from functools import wraps
 from typing import Optional, List, Callable
 from fastapi import Request, HTTPException, Depends
@@ -12,6 +13,21 @@ from ..firebase_config import verify_firebase_token, get_firestore_client, COLLE
 
 # Security scheme for Swagger UI
 security = HTTPBearer(auto_error=False)
+
+# Dev mode token for local testing (only works if GENESIS_DEV_MODE=true)
+DEV_MODE = os.getenv("GENESIS_DEV_MODE", "false").lower() == "true"
+DEV_TOKEN = "dev-test-token"
+
+
+def check_dev_token(token: str) -> Optional[dict]:
+    """Check if this is a valid dev token (only in dev mode)."""
+    if DEV_MODE and token == DEV_TOKEN:
+        return {
+            "uid": "dev-user-123",
+            "email": "dev@test.local",
+            "role": "admin",  # Dev token has admin access
+        }
+    return None
 
 
 class AuthenticatedUser:
@@ -148,7 +164,13 @@ def require_role(*allowed_roles: str):
             raise HTTPException(status_code=401, detail="Authorization header required")
         
         token = credentials.credentials
-        decoded = verify_firebase_token(token)
+        
+        # Check for dev token first (only works in dev mode)
+        decoded = check_dev_token(token)
+        
+        # If not dev token, try Firebase verification
+        if not decoded:
+            decoded = verify_firebase_token(token)
         
         if not decoded:
             raise HTTPException(status_code=401, detail="Invalid or expired token")
