@@ -14,7 +14,9 @@ from fastapi.middleware.cors import CORSMiddleware
 ml_path = Path(__file__).parent.parent.parent / "ml"
 sys.path.insert(0, str(ml_path.parent))
 
-from .routes import water_status, health
+from .routes import water_status, health, ml
+
+
 
 
 @asynccontextmanager
@@ -72,3 +74,4 @@ app.add_middleware(
 # Include routers
 app.include_router(health.router)
 app.include_router(water_status.router)
+app.include_router(ml.router)

@@ -1,0 +1,4 @@
+METRICS:
+1. Water Balance R2 Score: -0.3563
+2. Solvency Accuracy: 99.40%
+3. Insolvency Day R2 Score: 0.2075

@@ -34,68 +34,9 @@ except ImportError:
 from ml.data_fetchers import (
     fetch_weather_forecast,
     fetch_soil_data,
-    fetch_groundwater_status,
+    fetch_groundwater_data,
 )
-from ml.config import CROP_DATABASE, XGBOOST_PARAMS, MODEL_CACHE_DIR
-
-
-# ========================================================================
-# TRAINING LOCATIONS - RURAL AGRICULTURAL REGIONS ACROSS NORTH INDIA
-# ========================================================================
-# These are actual agricultural districts/blocks, NOT urban cities
-# Coordinates chosen for major farming regions
-
-TRAINING_LOCATIONS = [
-    # === UTTAR PRADESH (India's largest agricultural state) ===
-    {"lat": 25.4358, "lon": 81.8463, "name": "Chaka Block, Prayagraj, UP"},
-    {"lat": 25.3500, "lon": 81.7500, "name": "Sahson Block, Prayagraj, UP"},
-    {"lat": 26.1445, "lon": 80.2330, "name": "Fatehpur District, UP"},
-    {"lat": 26.4499, "lon": 80.3319, "name": "Kanpur Dehat, UP"},
-    {"lat": 27.1767, "lon": 79.0205, "name": "Shikohabad, Firozabad, UP"},
-    {"lat": 28.6692, "lon": 77.4538, "name": "Hapur District, UP"},
-    {"lat": 25.9255, "lon": 84.1750, "name": "Ballia District, UP"},
-    {"lat": 26.7922, "lon": 81.9226, "name": "Amethi District, UP"},
-    {"lat": 27.8956, "lon": 78.0826, "name": "Aligarh District, UP"},
-    {"lat": 26.6800, "lon": 83.1600, "name": "Gorakhpur Rural, UP"},
-    
-    # === PUNJAB (Wheat & Rice Bowl) ===
-    {"lat": 30.2110, "lon": 74.9455, "name": "Bathinda District, Punjab"},
-    {"lat": 30.0756, "lon": 75.0901, "name": "Mansa District, Punjab"},
-    {"lat": 29.7200, "lon": 76.2100, "name": "Karnal District, Haryana"},
-    {"lat": 30.3753, "lon": 76.7821, "name": "Patiala Rural, Punjab"},
-    {"lat": 31.1048, "lon": 75.3462, "name": "Jalandhar Rural, Punjab"},
-    
-    # === HARYANA (Agricultural Hub) ===
-    {"lat": 29.3919, "lon": 76.9689, "name": "Panipat Rural, Haryana"},
-    {"lat": 28.9845, "lon": 76.0841, "name": "Jhajjar District, Haryana"},
-    {"lat": 29.1667, "lon": 75.7333, "name": "Hisar District, Haryana"},
-    {"lat": 28.6000, "lon": 77.3300, "name": "Palwal District, Haryana"},
-    
-    # === RAJASTHAN (Mustard & Bajra Belt) ===
-    {"lat": 27.5530, "lon": 75.7870, "name": "Sikar District, Rajasthan"},
-    {"lat": 26.9124, "lon": 75.7873, "name": "Jaipur Rural, Rajasthan"},
-    {"lat": 25.3500, "lon": 74.6350, "name": "Bhilwara District, Rajasthan"},
-    {"lat": 27.2000, "lon": 77.5000, "name": "Bharatpur District, Rajasthan"},
-    {"lat": 26.4500, "lon": 74.6400, "name": "Ajmer Rural, Rajasthan"},
-    
-    # === MADHYA PRADESH (Soybean & Wheat Region) ===
-    {"lat": 23.8388, "lon": 78.7378, "name": "Sagar District, MP"},
-    {"lat": 24.5854, "lon": 77.4127, "name": "Vidisha District, MP"},
-    {"lat": 22.0574, "lon": 78.9382, "name": "Chhindwara District, MP"},
-    {"lat": 23.1765, "lon": 75.7885, "name": "Ujjain Rural, MP"},
-    {"lat": 24.2000, "lon": 76.3500, "name": "Mandsaur District, MP"},
-    
-    # === BIHAR (Rice & Maize Belt) ===
-    {"lat": 25.6000, "lon": 85.1000, "name": "Vaishali District, Bihar"},
-    {"lat": 25.8500, "lon": 86.6000, "name": "Samastipur District, Bihar"},
-    {"lat": 26.1200, "lon": 84.3900, "name": "Gopalganj District, Bihar"},
-    {"lat": 25.2500, "lon": 87.8600, "name": "Katihar District, Bihar"},
-    
-    # === GUJARAT (Cotton & Groundnut) ===
-    {"lat": 22.3000, "lon": 70.8000, "name": "Rajkot Rural, Gujarat"},
-    {"lat": 21.7600, "lon": 72.1500, "name": "Bhavnagar Rural, Gujarat"},
-    {"lat": 23.2000, "lon": 69.6600, "name": "Kutch District, Gujarat"},
-]
+from ml.config import CROP_DATABASE, XGBOOST_PARAMS, MODEL_CACHE_DIR, TRAINING_LOCATIONS
 
 
 async def fetch_location_data(lat: float, lon: float, name: str) -> dict:
@@ -103,9 +44,20 @@ async def fetch_location_data(lat: float, lon: float, name: str) -> dict:
     print(f"  Fetching data for {name}...")
     
     try:
-        weather = await fetch_weather_forecast(lat, lon, days=15)
+        # Visual Crossing expects combined lat,lon string
+        weather = await fetch_weather_forecast(f"{lat},{lon}", days=15)
         soil = await fetch_soil_data(lat, lon)
-        groundwater = await fetch_groundwater_status(lat, lon)
+        
+        # Parse district and state from name "District, State"
+        # Format assumed: "Location Name, State" or "Location, District, State"
+        parts = [p.strip() for p in name.split(",")]
+        state = parts[-1]
+        district = parts[-2] if len(parts) >= 2 else parts[0]
+        
+        # Clean up "District" suffix if present for safer matching
+        district = district.replace(" District", "").replace(" Rural", "")
+        
+        groundwater = await fetch_groundwater_data(state, district)
         
         return {
             "name": name,

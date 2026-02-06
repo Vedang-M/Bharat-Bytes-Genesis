@@ -325,3 +325,41 @@ WATER_STATUS_THRESHOLDS = {
     "safe": 600,
     "limited": 300,
 }
+
+# === TRAINING LOCATIONS (PAN-INDIA) ===
+# Representative agricultural districts from all zones
+# Coordinates chosen for major farming regions to ensure diverse soil/weather data
+
+TRAINING_LOCATIONS = [
+    # === NORTH INDIA ===
+    {"lat": 25.4358, "lon": 81.8463, "name": "Chaka Block, Prayagraj, UP"},
+    {"lat": 30.2110, "lon": 74.9455, "name": "Bathinda District, Punjab"},
+    {"lat": 29.3919, "lon": 76.9689, "name": "Panipat Rural, Haryana"},
+    {"lat": 27.5530, "lon": 75.7870, "name": "Sikar District, Rajasthan"},
+    
+    # === CENTRAL INDIA ===
+    {"lat": 23.1765, "lon": 75.7885, "name": "Ujjain Rural, MP"},
+    {"lat": 22.0574, "lon": 78.9382, "name": "Chhindwara District, MP"},
+    {"lat": 21.2514, "lon": 81.6296, "name": "Raipur District, Chhattisgarh"},
+    
+    # === WEST INDIA ===
+    {"lat": 20.0059, "lon": 73.7798, "name": "Nashik (Grapes/Onion), Maharashtra"},
+    {"lat": 18.4088, "lon": 76.5604, "name": "Latur (Soybean), Maharashtra"},
+    {"lat": 22.3039, "lon": 70.8022, "name": "Rajkot (Groundnut), Gujarat"},
+    {"lat": 21.1702, "lon": 72.8311, "name": "Surat (Sugarcane), Gujarat"},
+    
+    # === SOUTH INDIA ===
+    {"lat": 10.7870, "lon": 79.1378, "name": "Thanjavur (Rice Bowl), TN"},
+    {"lat": 12.5266, "lon": 76.8946, "name": "Mandya (Sugarcane), Karnataka"},
+    {"lat": 16.3067, "lon": 80.4365, "name": "Guntur (Chilli/Cotton), AP"},
+    {"lat": 10.7867, "lon": 76.6548, "name": "Palakkad (Rice), Kerala"},
+    {"lat": 17.3850, "lon": 78.4867, "name": "Ranga Reddy, Telangana"},
+    
+    # === EAST INDIA ===
+    {"lat": 23.2324, "lon": 87.8615, "name": "Bardhaman (Rice), West Bengal"},
+    {"lat": 21.3667, "lon": 83.6167, "name": "Bargarh (Rice), Odisha"},
+    {"lat": 25.6000, "lon": 85.1000, "name": "Vaishali (Maize), Bihar"},
+    
+    # === NORTH EAST INDIA ===
+    {"lat": 26.1158, "lon": 91.7086, "name": "Kamrup, Assam"},
+]
