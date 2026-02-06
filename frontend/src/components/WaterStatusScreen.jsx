@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   CheckCircle,
   MapPinned,
+  Loader2,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -15,12 +16,16 @@ import {
   getUserLocation,
   formatLocation,
 } from "../utils/locationUtils";
+import { getWaterStatus } from "../utils/apiUtils";
 
 const WaterStatusScreen = () => {
   const navigate = useNavigate();
   const [currentLanguage, setCurrentLanguage] = useState("hi");
   const [userLocation, setUserLocation] = useState(getSavedLocation());
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [isLoadingWater, setIsLoadingWater] = useState(false);
+  const [waterData, setWaterData] = useState(null);
+  const [error, setError] = useState(null);
 
   // Read language from localStorage on mount and when it changes
   useEffect(() => {
@@ -29,6 +34,40 @@ const WaterStatusScreen = () => {
       setCurrentLanguage(savedLanguage);
     }
   }, []);
+
+  // Fetch water status when location changes
+  useEffect(() => {
+    if (userLocation?.latitude && userLocation?.longitude) {
+      fetchWaterStatus(userLocation.latitude, userLocation.longitude);
+    }
+  }, [userLocation?.latitude, userLocation?.longitude]);
+
+  const fetchWaterStatus = async (lat, lon) => {
+    setIsLoadingWater(true);
+    setError(null);
+    try {
+      const data = await getWaterStatus(lat, lon);
+      setWaterData({
+        waterAvailability: data.water_balance_mm,
+        status: data.status,
+        location: data.location,
+        solvency: data.solvency,
+        weatherSummary: data.weather_summary,
+        groundwaterCategory: data.groundwater_category,
+      });
+    } catch (err) {
+      console.error("Error fetching water status:", err);
+      setError(err.message);
+      // Use fallback data if API fails
+      setWaterData({
+        waterAvailability: 400,
+        status: "limited",
+        location: { city: userLocation?.city || "—", state: userLocation?.state || "—" },
+      });
+    } finally {
+      setIsLoadingWater(false);
+    }
+  };
 
   const t = getTranslations(currentLanguage).waterStatus;
 
@@ -45,8 +84,13 @@ const WaterStatusScreen = () => {
     }
   };
 
-  // Get user's location from state
-  const locationDisplay = userLocation
+  // Get user's location from state or API response
+  const locationDisplay = waterData?.location 
+    ? {
+        city: waterData.location.city ?? waterData.location.district ?? "—",
+        state: waterData.location.state ?? "—",
+      }
+    : userLocation
     ? {
         city: userLocation.city ?? userLocation.district ?? "—",
         state: userLocation.state ?? "—",
@@ -57,10 +101,9 @@ const WaterStatusScreen = () => {
       };
 
   const MAX_WATER_CAPACITY = 1000;
-  const waterData = {
-    location: locationDisplay,
-    waterAvailability: 400,
-    status: "limited", //limited, safe, critical
+  const displayWaterData = waterData || {
+    waterAvailability: 0,
+    status: "limited",
   };
 
   const statusConfig = {
@@ -87,7 +130,7 @@ const WaterStatusScreen = () => {
     },
   };
 
-  const current = statusConfig[waterData.status];
+  const current = statusConfig[displayWaterData.status] || statusConfig.limited;
   const Icon = current.icon;
 
   const size = 260;
@@ -96,7 +139,7 @@ const WaterStatusScreen = () => {
   const center = size / 2;
   const circumference = 2 * Math.PI * radius;
   const percentage = Math.min(
-    Math.max((waterData.waterAvailability / MAX_WATER_CAPACITY) * 100, 5),
+    Math.max((displayWaterData.waterAvailability / MAX_WATER_CAPACITY) * 100, 5),
     100,
   );
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
@@ -139,7 +182,7 @@ const WaterStatusScreen = () => {
                 className="text-[#A5D6A7] md:w-[18px] md:h-[18px]"
               />
               <h2 className="text-xl md:text-lg font-black text-white drop-shadow-sm leading-none pb-0.5">
-                {waterData.location.city}, {waterData.location.state}
+                {locationDisplay.city}, {locationDisplay.state}
               </h2>
               <button
                 onClick={handleFetchLocation}
@@ -208,14 +251,21 @@ const WaterStatusScreen = () => {
                 <div className="absolute inset-0 flex flex-col items-center justify-center pt-2">
                   {/* Inner small glass bubble */}
                   <div className="bg-white/10 p-3 rounded-full shadow-inner mb-2 backdrop-blur-sm border border-white/5">
-                    <Droplet
-                      size={32}
-                      fill="white"
-                      className="text-white drop-shadow-md"
-                    />
+                    {isLoadingWater ? (
+                      <Loader2
+                        size={32}
+                        className="text-white animate-spin"
+                      />
+                    ) : (
+                      <Droplet
+                        size={32}
+                        fill="white"
+                        className="text-white drop-shadow-md"
+                      />
+                    )}
                   </div>
                   <span className="text-7xl font-black text-white drop-shadow-md tracking-tighter leading-none">
-                    {waterData.waterAvailability}
+                    {isLoadingWater ? "..." : displayWaterData.waterAvailability}
                   </span>
                   <span className="text-sm font-bold text-white/60 uppercase tracking-widest mt-2">
                     {t.unit}

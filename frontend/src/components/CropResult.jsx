@@ -4,12 +4,22 @@ import {
   TrendingUp,
   AlertCircle,
   CheckCircle2,
+  Loader2,
+  ArrowLeft,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { getTranslations, getLanguage } from "../utils/languageUtils";
+import { checkCropViability, getSmartSwap } from "../utils/apiUtils";
+import { getSavedLocation } from "../utils/locationUtils";
 
-const CropResult = ({ selectedCrop }) => {
+const CropResult = ({ selectedCrop: propSelectedCrop }) => {
+  const navigate = useNavigate();
   const [language, setLanguage] = useState("hi");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [cropData, setCropData] = useState(null);
+  const [alternatives, setAlternatives] = useState([]);
 
   useEffect(() => {
     const savedLanguage = getLanguage();
@@ -20,18 +30,98 @@ const CropResult = ({ selectedCrop }) => {
 
   const t = getTranslations(language);
 
-  // Mock crop result data - in real app, this would come from API based on water availability
-  const cropData = selectedCrop || {
-    id: "wheat",
-    name: t.crops.cropNames.wheat,
-    image: "/wheat.webp",
-    waterNeed: "medium",
-    recommendation: "suitable", // suitable, caution, not-recommended
-    waterRequired: 450,
-    availableWater: 400,
-    yieldPrediction: t.advice.defaultYield,
-    tips: t.advice.defaultTips,
+  // Get selected crop from props or sessionStorage
+  const getSelectedCrop = () => {
+    if (propSelectedCrop) return propSelectedCrop;
+    try {
+      const stored = sessionStorage.getItem("selectedCrop");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
   };
+
+  // Fetch crop viability on mount
+  useEffect(() => {
+    const fetchCropViability = async () => {
+      const selectedCrop = getSelectedCrop();
+      const location = getSavedLocation();
+      
+      if (!selectedCrop?.id) {
+        setError("No crop selected");
+        setIsLoading(false);
+        return;
+      }
+
+      const lat = selectedCrop.latitude || location?.latitude;
+      const lon = selectedCrop.longitude || location?.longitude;
+
+      if (!lat || !lon) {
+        setError("Location not available");
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const data = await checkCropViability(selectedCrop.id, lat, lon);
+        
+        setCropData({
+          id: data.crop_id,
+          name: language === "hi" ? data.crop_name_hi : data.crop_name,
+          nameHi: data.crop_name_hi,
+          nameEn: data.crop_name,
+          image: selectedCrop.image || `/${data.crop_id}.webp`,
+          waterNeed: selectedCrop.waterNeed || "medium",
+          recommendation: data.recommendation,
+          waterRequired: data.water_required_mm,
+          availableWater: data.water_available_mm,
+          waterRatio: data.water_ratio,
+          waterDeficit: data.water_deficit_mm,
+          message: data.message,
+          messageEn: data.message_en,
+          isViable: data.is_viable,
+          yieldPrediction: data.is_viable 
+            ? t.advice.defaultYield 
+            : t.advice.yieldReduced,
+          tips: data.is_viable 
+            ? t.advice.defaultTips 
+            : t.advice.waterSavingTips,
+        });
+
+        // If crop is not recommended, fetch alternatives
+        if (data.recommendation === "not-recommended" && data.water_available_mm > 0) {
+          try {
+            const altData = await getSmartSwap(data.crop_id, data.water_available_mm, 3);
+            setAlternatives(altData.recommendations || []);
+          } catch (altErr) {
+            console.error("Error fetching alternatives:", altErr);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching crop viability:", err);
+        setError(err.message);
+        
+        // Use fallback data
+        const fallbackCrop = getSelectedCrop();
+        setCropData({
+          id: fallbackCrop?.id || "wheat",
+          name: fallbackCrop?.name || t.crops.cropNames.wheat,
+          image: fallbackCrop?.image || "/wheat.webp",
+          waterNeed: fallbackCrop?.waterNeed || "medium",
+          recommendation: "caution",
+          waterRequired: 450,
+          availableWater: 400,
+          yieldPrediction: t.advice.defaultYield,
+          tips: t.advice.defaultTips,
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCropViability();
+  }, [language]);
 
   const recommendationConfig = {
     suitable: {
@@ -57,7 +147,7 @@ const CropResult = ({ selectedCrop }) => {
     },
   };
 
-  const current = recommendationConfig[cropData.recommendation];
+  const current = recommendationConfig[cropData?.recommendation] || recommendationConfig.caution;
   const Icon = current.icon;
 
   // --- REUSABLE GLASS STYLES (MATCHING PREVIOUS SCREENS) ---
@@ -65,6 +155,46 @@ const CropResult = ({ selectedCrop }) => {
     "bg-gradient-to-b from-white/20 to-white/5 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.1)]";
   const glassPillClass =
     "bg-gradient-to-b from-white/20 to-white/5 backdrop-blur-lg border border-white/10 shadow-sm";
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#FAFAF7] font-hindi relative flex flex-col items-center justify-center">
+        <img
+          src="/Hero-image-desktop.webp"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover hidden md:block"
+        />
+        <img
+          src="/Hero-inmage-mobile.webp"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover block md:hidden"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#422B06]/80 to-[#422B06]/50" />
+        <div className="relative z-10 flex flex-col items-center gap-4">
+          <Loader2 size={48} className="text-white animate-spin" />
+          <p className="text-white text-xl font-bold">
+            {language === "hi" ? "फसल विश्लेषण हो रहा है..." : "Analyzing crop..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // If no crop data available
+  if (!cropData) {
+    return (
+      <div className="min-h-screen bg-[#FAFAF7] font-hindi relative flex flex-col items-center justify-center">
+        <p className="text-xl">{error || "No crop data available"}</p>
+        <button 
+          onClick={() => navigate("/crops")}
+          className="mt-4 px-6 py-3 bg-green-600 text-white rounded-full"
+        >
+          {language === "hi" ? "फसल चुनें" : "Select Crop"}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FAFAF7] font-hindi relative flex flex-col">
@@ -196,7 +326,7 @@ const CropResult = ({ selectedCrop }) => {
               💡 {t.advice.tips}
             </h3>
             <ul className="space-y-4">
-              {cropData.tips.map((tip, index) => (
+              {(cropData.tips || []).map((tip, index) => (
                 <li key={index} className="flex items-start gap-4">
                   <div className="bg-white/10 border border-white/10 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 shadow-sm">
                     <span className="text-white text-sm font-black">

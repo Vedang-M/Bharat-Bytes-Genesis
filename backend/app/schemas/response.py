@@ -4,7 +4,7 @@ Pydantic models for API response serialization.
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Any
 from datetime import datetime
 
 
@@ -15,6 +15,7 @@ class LocationInfo(BaseModel):
     state: str
     district: str
     block: Optional[str] = None
+    city: Optional[str] = None
 
 
 class WeatherSummary(BaseModel):
@@ -38,6 +39,13 @@ class SolvencyInfo(BaseModel):
     insolvency_in_days: Optional[int] = None
 
 
+class DataSources(BaseModel):
+    """Data source information."""
+    weather: Optional[str] = None
+    soil: Optional[str] = None
+    groundwater: Optional[str] = None
+
+
 class WaterStatusResponse(BaseModel):
     """Response for water status endpoint."""
     location: LocationInfo
@@ -47,6 +55,19 @@ class WaterStatusResponse(BaseModel):
     solvency: SolvencyInfo
     safe_to_sow: bool
     weather_summary: WeatherSummary
+    groundwater_category: str
+    timestamp: str
+    data_sources: Optional[DataSources] = None
+
+
+class WaterStatusSimpleResponse(BaseModel):
+    """Simplified response for water status (frontend-friendly)."""
+    water_balance_mm: float = Field(..., description="Available water in mm")
+    status: str = Field(..., description="safe, limited, or critical")
+    location: dict
+    solvency: dict
+    safe_to_sow: bool
+    weather_summary: dict
     groundwater_category: str
     timestamp: str
 
@@ -110,8 +131,25 @@ class BestSowingDateResponse(BaseModel):
     message: Optional[str] = None
 
 
+class CropListItem(BaseModel):
+    """Single crop in crop list."""
+    id: str
+    name_en: str
+    name_hi: str
+    water_req_mm: int
+    water_need_category: str
+    season_days: int
+    image: Optional[str] = None
+
+
+class CropListResponse(BaseModel):
+    """Response for crops list endpoint."""
+    crops: List[CropListItem]
+
+
 class HealthResponse(BaseModel):
     """Health check response."""
     status: str
     version: str
     timestamp: str
+    ml_available: Optional[bool] = None

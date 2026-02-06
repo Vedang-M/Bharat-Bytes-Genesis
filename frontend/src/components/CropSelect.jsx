@@ -1,10 +1,17 @@
-import { Sprout, CheckCircle2 } from "lucide-react";
+import { Sprout, CheckCircle2, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { getTranslations, getLanguage } from "../utils/languageUtils";
+import { getCropsList } from "../utils/apiUtils";
+import { getSavedLocation } from "../utils/locationUtils";
 
 const CropSelect = () => {
+  const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState(null);
   const [language, setLanguage] = useState("hi");
+  const [crops, setCrops] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const savedLanguage = getLanguage();
@@ -13,51 +20,64 @@ const CropSelect = () => {
     }
   }, []);
 
+  // Fetch crops list from API
+  useEffect(() => {
+    const fetchCrops = async () => {
+      setIsLoading(true);
+      try {
+        const data = await getCropsList();
+        // Map API response to expected format
+        const mappedCrops = data.crops.map(crop => ({
+          id: crop.id,
+          name: language === "hi" ? crop.name_hi : crop.name_en,
+          nameHi: crop.name_hi,
+          nameEn: crop.name_en,
+          image: crop.image || `/${crop.id}.webp`,
+          waterNeed: crop.water_need_category,
+          waterReqMm: crop.water_req_mm,
+        }));
+        setCrops(mappedCrops);
+      } catch (err) {
+        console.error("Error fetching crops:", err);
+        setError(err.message);
+        // Use default crops if API fails
+        setCrops(getDefaultCrops(t));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCrops();
+  }, [language]);
+
   const t = getTranslations(language);
 
-  const crops = [
-    {
-      id: "sugarcane",
-      name: t.crops.cropNames.sugarcane,
-      image: "/sugarcane.webp",
-      waterNeed: "high",
-    },
-    {
-      id: "paddy",
-      name: t.crops.cropNames.paddy,
-      image: "/rice.webp",
-      waterNeed: "high",
-    },
-    {
-      id: "wheat",
-      name: t.crops.cropNames.wheat,
-      image: "/wheat.webp",
-      waterNeed: "medium",
-    },
-    {
-      id: "mustard",
-      name: t.crops.cropNames.mustard,
-      image: "/mustard.webp",
-      waterNeed: "low",
-    },
-    {
-      id: "chickpea",
-      name: t.crops.cropNames.chickpea,
-      image: "/chickpea.webp",
-      waterNeed: "low",
-    },
-    {
-      id: "cotton",
-      name: t.crops.cropNames.cotton,
-      image: "/cotton.webp",
-      waterNeed: "medium",
-    },
+  // Default crops fallback
+  const getDefaultCrops = (translations) => [
+    { id: "sugarcane", name: translations.crops.cropNames.sugarcane, image: "/sugarcane.webp", waterNeed: "high" },
+    { id: "paddy", name: translations.crops.cropNames.paddy, image: "/rice.webp", waterNeed: "high" },
+    { id: "wheat", name: translations.crops.cropNames.wheat, image: "/wheat.webp", waterNeed: "medium" },
+    { id: "mustard", name: translations.crops.cropNames.mustard, image: "/mustard.webp", waterNeed: "low" },
+    { id: "chickpea", name: translations.crops.cropNames.chickpea, image: "/chickpea.webp", waterNeed: "low" },
+    { id: "cotton", name: translations.crops.cropNames.cotton, image: "/cotton.webp", waterNeed: "medium" },
   ];
 
   const handleSelect = (crop) => {
     setSelectedId(crop.id);
     console.log("Selected crop:", crop);
-    // Optionally navigate to advice page or store selection
+    
+    // Store selected crop in sessionStorage for CropResult page
+    const location = getSavedLocation();
+    sessionStorage.setItem("selectedCrop", JSON.stringify({
+      ...crop,
+      latitude: location?.latitude,
+      longitude: location?.longitude,
+    }));
+    
+    // Navigate to advice (crop result) page
+    setTimeout(() => {
+      navigate("/advice");
+    }, 300);
   };
 
   // --- REUSABLE GLASS STYLES (MATCHING PREVIOUS SCREEN) ---
