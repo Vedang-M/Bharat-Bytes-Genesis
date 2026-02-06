@@ -1,0 +1,50 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@100..900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-in;
+  }
+
+  .animate-scaleIn {
+    animation: scaleIn 0.4s ease-out;
+  }
+
+  .animate-slideUp {
+    animation: slideUp 0.4s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
