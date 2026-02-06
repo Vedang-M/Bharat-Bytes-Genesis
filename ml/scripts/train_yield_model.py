@@ -21,6 +21,7 @@ from datetime import datetime
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from ml.config import CROP_DATABASE, MODEL_CACHE_DIR, XGBOOST_PARAMS
+from ml.model_metrics import ModelMetrics
 
 def generate_yield_data(n_samples=5000):
     print("Generating synthetic agronomic data for yield training...")
@@ -107,12 +108,30 @@ def train_yield_model():
     print(f"Generated {len(X)} samples.")
     print(f"Yield Range: {y.min():.1f} to {y.max():.1f} quintals/acre")
     
-    # 2. Train Model
+    # 2. Split data for evaluation
+    from sklearn.model_selection import train_test_split
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    print(f"Training set: {len(X_train)}, Test set: {len(X_test)}")
+    
+    # 3. Train Model
     print("Training XGBoost Regressor...")
     model = xgb.XGBRegressor(**XGBOOST_PARAMS)
-    model.fit(X, y)
+    model.fit(X_train, y_train)
     
-    # 3. Save Model
+    # 4. Evaluate and save metrics
+    y_pred = model.predict(X_test)
+    metrics = ModelMetrics("yield_predictor")
+    metrics.save_regression_metrics(
+        y_test, y_pred,
+        target_name="yield_quintal_per_acre",
+        additional_info={
+            "training_samples": len(X_train),
+            "test_samples": len(X_test),
+            "features": ["rainfall", "et0", "recharge", "soil_awc", "crop_req", "depth", "temp"]
+        }
+    )
+    
+    # 5. Save Model
     model_dir = Path(MODEL_CACHE_DIR)
     model_dir.mkdir(parents=True, exist_ok=True)
     save_path = model_dir / "yield_predictor.joblib"

@@ -15,7 +15,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 ml_path = Path(__file__).parent.parent.parent / "ml"
 sys.path.insert(0, str(ml_path.parent))
 
-from .routes import water_status, health, ml, auth, admin, ads
+from .routes import water_status, health, ml, auth, admin, ads, dev_docs
 from .firebase_config import initialize_firebase
 
 
@@ -91,3 +91,4 @@ app.include_router(ml.router)
 app.include_router(auth.router)
 app.include_router(admin.router)
 app.include_router(ads.router)
+app.include_router(dev_docs.router)

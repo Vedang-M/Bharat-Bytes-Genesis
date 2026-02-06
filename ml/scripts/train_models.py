@@ -37,6 +37,7 @@ from ml.data_fetchers import (
     fetch_groundwater_data,
 )
 from ml.config import CROP_DATABASE, XGBOOST_PARAMS, MODEL_CACHE_DIR, TRAINING_LOCATIONS
+from ml.model_metrics import ModelMetrics
 
 
 async def fetch_location_data(lat: float, lon: float, name: str) -> dict:
@@ -210,7 +211,7 @@ def generate_training_samples(api_data: list, samples_per_location: int = 100) -
 
 
 def train_models(X, y_water, y_solvency, y_insolvency):
-    """Trains and saves XGBoost models."""
+    """Trains and saves XGBoost models with metrics tracking."""
     print("\n" + "="*60)
     print("TRAINING XGBOOST MODELS")
     print("="*60)
@@ -218,29 +219,62 @@ def train_models(X, y_water, y_solvency, y_insolvency):
     model_dir = Path(MODEL_CACHE_DIR)
     model_dir.mkdir(parents=True, exist_ok=True)
     
+    # Split data for evaluation (80/20)
+    from sklearn.model_selection import train_test_split
+    X_train, X_test, y_water_train, y_water_test = train_test_split(X, y_water, test_size=0.2, random_state=42)
+    _, _, y_solv_train, y_solv_test = train_test_split(X, y_solvency, test_size=0.2, random_state=42)
+    _, _, y_insol_train, y_insol_test = train_test_split(X, y_insolvency, test_size=0.2, random_state=42)
+    
     # Water Balance Regressor
     print("\n1. Training Water Balance Regressor...")
     water_model = xgb.XGBRegressor(**XGBOOST_PARAMS)
-    water_model.fit(X, y_water)
+    water_model.fit(X_train, y_water_train)
     water_path = model_dir / "water_balance.joblib"
     joblib.dump(water_model, water_path)
     print(f"   Saved to: {water_path}")
     
+    # Save water balance metrics
+    water_pred = water_model.predict(X_test)
+    water_metrics = ModelMetrics("water_balance")
+    water_metrics.save_regression_metrics(
+        y_water_test, water_pred,
+        target_name="water_balance_mm",
+        additional_info={"training_samples": len(X_train), "test_samples": len(X_test)}
+    )
+    
     # Solvency Classifier
     print("\n2. Training Solvency Classifier...")
     solvency_model = xgb.XGBClassifier(**XGBOOST_PARAMS)
-    solvency_model.fit(X, y_solvency)
+    solvency_model.fit(X_train, y_solv_train)
     solvency_path = model_dir / "solvency.joblib"
     joblib.dump(solvency_model, solvency_path)
     print(f"   Saved to: {solvency_path}")
     
+    # Save solvency metrics
+    solv_pred = solvency_model.predict(X_test)
+    solv_metrics = ModelMetrics("solvency")
+    solv_metrics.save_classification_metrics(
+        y_solv_test, solv_pred,
+        labels=['Risky', 'Solvent'],
+        additional_info={"training_samples": len(X_train), "test_samples": len(X_test)}
+    )
+    
     # Insolvency Day Regressor
     print("\n3. Training Insolvency Day Predictor...")
     insolvency_model = xgb.XGBRegressor(**XGBOOST_PARAMS)
-    insolvency_model.fit(X, y_insolvency)
+    insolvency_model.fit(X_train, y_insol_train)
     insolvency_path = model_dir / "insolvency_day.joblib"
     joblib.dump(insolvency_model, insolvency_path)
     print(f"   Saved to: {insolvency_path}")
+    
+    # Save insolvency day metrics
+    insol_pred = insolvency_model.predict(X_test)
+    insol_metrics = ModelMetrics("insolvency_day")
+    insol_metrics.save_regression_metrics(
+        y_insol_test, insol_pred,
+        target_name="insolvency_day",
+        additional_info={"training_samples": len(X_train), "test_samples": len(X_test)}
+    )
     
     # Save training metadata
     metadata = {

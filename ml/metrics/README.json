@@ -1,0 +1,12 @@
+{
+  "info": "This directory stores model performance metrics",
+  "metrics_files": [
+    "water_balance_metrics.json",
+    "solvency_metrics.json",
+    "insolvency_day_metrics.json",
+    "yield_predictor_metrics.json",
+    "crop_viability_metrics.json"
+  ],
+  "generated_by": "ml.model_metrics.ModelMetrics",
+  "usage": "Metrics are automatically generated when training models with the updated training scripts."
+}

@@ -17,6 +17,7 @@ import CropSelect from "./components/CropSelect";
 import CropResult from "./components/CropResult";
 import ProfilePage from "./components/ProfilePage";
 import ApiDocumentation from "./components/ApiDocumentation";
+import Documentation from "./components/Documentation";
 import SarpanchDashboard from "./sarpanch/SarpanchDashboard";
 import AdminDashboard from "./components/AdminDashboard";
 import AppLayout from "./components/AppLayout";
@@ -187,6 +188,7 @@ function AppRoutes() {
 
       {/* API Documentation route (no layout, no auth) */}
       <Route path="/dev/api" element={<ApiDocumentation />} />
+      <Route path="/documentation" element={<Documentation />} />
 
       {/* Sarpanch Dashboard route - Requires sarpanch role */}
       <Route

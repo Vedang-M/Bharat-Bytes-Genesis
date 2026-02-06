@@ -251,3 +251,78 @@ async def predict_crop_yield(req: ViabilityRequest):
         estimated_profit_inr=round(profit, 2),
         confidence_score=0.92
     )
+
+
+@router.get("/metrics")
+async def get_model_metrics(model_name: str = None):
+    """
+    Get performance metrics for ML models.
+    
+    Query Parameters:
+        model_name: Optional. Specific model name (e.g., 'solvency', 'yield_predictor').
+                   If not provided, returns summary of all models.
+    
+    Available models:
+        - water_balance: Water balance regression model
+        - solvency: Solvency classification model  
+        - insolvency_day: Insolvency day regression model
+        - yield_predictor: Yield prediction regression model
+        - crop_viability: Crop viability classification model
+    """
+    try:
+        from ml.model_metrics import ModelMetrics
+        
+        if model_name:
+            # Return metrics for specific model
+            metrics = ModelMetrics.load_metrics(model_name)
+            if not metrics:
+                raise HTTPException(
+                    status_code=404, 
+                    detail=f"Metrics not found for model: {model_name}. Train the model first."
+                )
+            return metrics
+        else:
+            # Return summary of all models
+            summary = ModelMetrics.get_metrics_summary()
+            if not summary["models"]:
+                return {
+                    "message": "No model metrics available. Train models first.",
+                    "hint": "Run: python -m ml.scripts.train_models"
+                }
+            return summary
+            
+    except ImportError:
+        raise HTTPException(
+            status_code=503,
+            detail="Model metrics module not available"
+        )
+
+
+@router.get("/metrics/all")
+async def get_all_model_metrics():
+    """
+    Get detailed metrics for all trained ML models.
+    Returns complete metrics including confusion matrices, per-class metrics, etc.
+    """
+    try:
+        from ml.model_metrics import ModelMetrics
+        
+        all_metrics = ModelMetrics.get_all_metrics()
+        if not all_metrics:
+            return {
+                "message": "No model metrics available. Train models first.",
+                "available_training_scripts": [
+                    "python -m ml.scripts.train_models",
+                    "python -m ml.scripts.train_yield_model",
+                    "python -m ml.scripts.train_viability_model"
+                ]
+            }
+        return {
+            "models": all_metrics,
+            "total_models": len(all_metrics)
+        }
+    except ImportError:
+        raise HTTPException(
+            status_code=503,
+            detail="Model metrics module not available"
+        )

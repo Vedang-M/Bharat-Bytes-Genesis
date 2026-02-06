@@ -24,6 +24,7 @@ except ImportError:
     sys.exit(1)
 
 from ml.config import MODEL_CACHE_DIR, CROP_DATABASE
+from ml.model_metrics import ModelMetrics
 
 def generate_viability_dataset(n_samples=5000):
     """
@@ -114,6 +115,18 @@ def train_viability_model():
     print(f"Accuracy: {accuracy:.4f}")
     print("\nClassification Report:")
     print(classification_report(y_test, y_pred, target_names=['Risky', 'Solvent']))
+    
+    # Save metrics using ModelMetrics
+    metrics = ModelMetrics("crop_viability")
+    metrics.save_classification_metrics(
+        y_test, y_pred,
+        labels=['Risky', 'Solvent'],
+        additional_info={
+            "training_samples": len(X_train),
+            "test_samples": len(X_test),
+            "features": list(X.columns)
+        }
+    )
     
     # Feature Importance
     print("\nFeature Importance:")

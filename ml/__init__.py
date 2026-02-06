@@ -36,6 +36,7 @@ from .crop_advisor import (
     get_profit_per_drop_ranking,
     get_best_sowing_date,
 )
+from .model_metrics import ModelMetrics
 
 __all__ = [
     # Config
@@ -57,4 +58,6 @@ __all__ = [
     "calculate_estimated_profit",
     "get_profit_per_drop_ranking",
     "get_best_sowing_date",
+    # Metrics
+    "ModelMetrics",
 ]
