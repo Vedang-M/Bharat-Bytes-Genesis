@@ -6,10 +6,16 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { getTranslations, getLanguage } from "../utils/languageUtils";
+import { fetchCropAdvice } from "../utils/api";
 
-const CropResult = ({ selectedCrop }) => {
+const CropResult = () => {
   const [language, setLanguage] = useState("hi");
+  const [advice, setAdvice] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const loc = useLocation();
+  const routeState = loc.state || {};
 
   useEffect(() => {
     const savedLanguage = getLanguage();
@@ -20,17 +26,39 @@ const CropResult = ({ selectedCrop }) => {
 
   const t = getTranslations(language);
 
-  // Mock crop result data - in real app, this would come from API based on water availability
-  const cropData = selectedCrop || {
-    id: "wheat",
-    name: t.crops.cropNames.wheat,
-    image: "/wheat.webp",
-    waterNeed: "medium",
-    recommendation: "suitable", // suitable, caution, not-recommended
-    waterRequired: 450,
-    availableWater: 400,
-    yieldPrediction: t.advice.defaultYield,
-    tips: t.advice.defaultTips,
+  // Fetch crop advice from backend
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const data = await fetchCropAdvice({
+          crop_id: routeState.cropId || "wheat",
+          water_availability: routeState.waterAvailability || 400,
+          district: routeState.district || "",
+          state: routeState.waterState || "",
+          language,
+        });
+        setAdvice(data);
+      } catch (err) {
+        console.error("Crop advice fetch failed:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [routeState.cropId, routeState.waterAvailability, language]);
+
+  // Build display data from API response + route state
+  const cropData = {
+    id: routeState.cropId || "wheat",
+    name: routeState.cropName || t.crops.cropNames.wheat,
+    image: routeState.cropImage || "/wheat.webp",
+    waterNeed: routeState.waterNeed || "medium",
+    recommendation: advice?.recommendation || "caution",
+    waterRequired: advice?.water_required || 450,
+    availableWater: advice?.water_available || routeState.waterAvailability || 400,
+    yieldPrediction: advice?.yield_prediction || t.advice.defaultYield,
+    tips: advice?.tips || t.advice.defaultTips,
   };
 
   const recommendationConfig = {

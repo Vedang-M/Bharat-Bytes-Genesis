@@ -15,12 +15,15 @@ import {
   getUserLocation,
   formatLocation,
 } from "../utils/locationUtils";
+import { fetchWaterStatus } from "../utils/api";
 
 const WaterStatusScreen = () => {
   const navigate = useNavigate();
   const [currentLanguage, setCurrentLanguage] = useState("hi");
   const [userLocation, setUserLocation] = useState(getSavedLocation());
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [waterData, setWaterData] = useState(null);
+  const [isLoadingWater, setIsLoadingWater] = useState(false);
 
   // Read language from localStorage on mount and when it changes
   useEffect(() => {
@@ -29,6 +32,27 @@ const WaterStatusScreen = () => {
       setCurrentLanguage(savedLanguage);
     }
   }, []);
+
+  // Fetch water data from backend whenever location changes
+  useEffect(() => {
+    const loadWater = async () => {
+      const loc = userLocation;
+      if (!loc) return;
+      setIsLoadingWater(true);
+      try {
+        const data = await fetchWaterStatus({
+          district: loc.district || loc.city || "",
+          state: loc.state || "",
+        });
+        setWaterData(data);
+      } catch (err) {
+        console.error("Water status fetch failed:", err);
+      } finally {
+        setIsLoadingWater(false);
+      }
+    };
+    loadWater();
+  }, [userLocation]);
 
   const t = getTranslations(currentLanguage).waterStatus;
 
@@ -57,10 +81,11 @@ const WaterStatusScreen = () => {
       };
 
   const MAX_WATER_CAPACITY = 1000;
-  const waterData = {
-    location: locationDisplay,
-    waterAvailability: 400,
+  // Use API data if available, else fallback
+  const displayWater = waterData || {
+    waterAvailability: 0,
     status: "limited",
+    location: locationDisplay,
   };
 
   const statusConfig = {
@@ -87,7 +112,7 @@ const WaterStatusScreen = () => {
     },
   };
 
-  const current = statusConfig[waterData.status];
+  const current = statusConfig[displayWater.status];
   const Icon = current.icon;
 
   const size = 260;
@@ -96,7 +121,7 @@ const WaterStatusScreen = () => {
   const center = size / 2;
   const circumference = 2 * Math.PI * radius;
   const percentage = Math.min(
-    Math.max((waterData.waterAvailability / MAX_WATER_CAPACITY) * 100, 5),
+    Math.max((displayWater.waterAvailability / MAX_WATER_CAPACITY) * 100, 5),
     100,
   );
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
@@ -136,7 +161,7 @@ const WaterStatusScreen = () => {
             <div className="flex items-center gap-1.5 flex-wrap">
               <MapPin size={18} className="text-[#A5D6A7]" />
               <h2 className="text-lg font-black text-white drop-shadow-sm leading-none pb-0.5">
-                {waterData.location.city}, {waterData.location.state}
+                {locationDisplay.city}, {locationDisplay.state}
               </h2>
               <button
                 onClick={handleFetchLocation}
@@ -212,7 +237,7 @@ const WaterStatusScreen = () => {
                     />
                   </div>
                   <span className="text-7xl font-black text-white drop-shadow-md tracking-tighter leading-none">
-                    {waterData.waterAvailability}
+                    {displayWater.waterAvailability}
                   </span>
                   <span className="text-sm font-bold text-white/60 uppercase tracking-widest mt-2">
                     {t.unit}
@@ -258,7 +283,7 @@ const WaterStatusScreen = () => {
 
             {/* CTA Button */}
             <button
-              onClick={() => navigate("/crops")}
+              onClick={() => navigate("/crops", { state: { waterAvailability: displayWater.waterAvailability, district: locationDisplay.city, waterState: locationDisplay.state } })}
               className="group bg-[#2E7D32] text-white rounded-[2rem] p-2 pl-8 pr-2 h-20 flex items-center justify-between shadow-xl shadow-[#2E7D32]/20 border border-[#2E7D32]/50 active:scale-[0.98] transition-all"
             >
               <span className="text-xl font-black tracking-wide">{t.cta}</span>

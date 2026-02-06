@@ -79,5 +79,16 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173,
     allowedHosts: ['overweening-unmomentously-garfield.ngrok-free.dev'],
+    proxy: {
+      // Proxy /api and /users to the FastAPI backend
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/users': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+    },
   },
 })

@@ -1,10 +1,14 @@
 import { Sprout, CheckCircle2 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { getTranslations, getLanguage } from "../utils/languageUtils";
 
 const CropSelect = () => {
   const [selectedId, setSelectedId] = useState(null);
   const [language, setLanguage] = useState("hi");
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { waterAvailability = 400, district = "", waterState = "" } = location.state || {};
 
   useEffect(() => {
     const savedLanguage = getLanguage();
@@ -56,8 +60,19 @@ const CropSelect = () => {
 
   const handleSelect = (crop) => {
     setSelectedId(crop.id);
-    console.log("Selected crop:", crop);
-    // Optionally navigate to advice page or store selection
+    // Navigate to advice page with selected crop and water data
+    navigate("/advice", {
+      state: {
+        cropId: crop.id,
+        cropName: crop.name,
+        cropImage: crop.image,
+        waterNeed: crop.waterNeed,
+        waterAvailability,
+        district,
+        waterState,
+        language,
+      },
+    });
   };
 
   // --- REUSABLE GLASS STYLES (MATCHING PREVIOUS SCREEN) ---
