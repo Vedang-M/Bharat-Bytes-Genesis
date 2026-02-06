@@ -51,6 +51,7 @@ from ..services.water_status_service import (
     check_crop_viability_for_location,
     get_alternative_crops,
 )
+from ..utils.water_utils import normalize_water_to_percentage
 
 router = APIRouter(prefix="/api", tags=["Water Wallet"])
 
@@ -111,17 +112,26 @@ async def get_water_status_simple(
         sources = result.get("data_sources", {})
         source_parts = []
         for key, val in sources.items():
-            if val and "Fallback" not in val:
-                source_parts.append(key.title())
-        data_source = ", ".join(source_parts) if source_parts else "Estimated Data"
+            if val and "Fallback" not in val and "Unknown" not in val:
+                source_parts.append(val)
+        data_source = "; ".join(source_parts) if source_parts else "Estimated Data"
+        
+        # Get timestamps from service result
+        data_updated_at = result.get("data_updated_at", datetime.utcnow())
+        forecast_generated_at = result.get("forecast_generated_at", datetime.utcnow())
+        
+        # Calculate water percentage (500mm = 100%)
+        water_percentage = normalize_water_to_percentage(water_level)
         
         return WaterStatusSimpleResponse(
             location=location_str,
             latitude=float(lat),
             longitude=float(lon),
             water_level_mm=water_level,
+            water_percentage=water_percentage,
             status=status,
-            last_updated_at=datetime.utcnow(),
+            last_updated_at=data_updated_at,
+            forecast_generated_at=forecast_generated_at,
             data_source=data_source,
         )
         

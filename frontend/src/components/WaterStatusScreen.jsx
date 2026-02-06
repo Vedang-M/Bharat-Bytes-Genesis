@@ -7,6 +7,7 @@ import {
   CheckCircle,
   MapPinned,
   Loader2,
+  Clock,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -35,6 +36,15 @@ const WaterStatusScreen = () => {
     }
   }, []);
 
+  // Auto-fetch location on mount if not already saved
+  useEffect(() => {
+    const saved = getSavedLocation();
+    if (!saved?.latitude || !saved?.longitude) {
+      // No saved location, auto-fetch
+      handleFetchLocation();
+    }
+  }, []);
+
   // Fetch water status when location changes
   useEffect(() => {
     if (userLocation?.latitude && userLocation?.longitude) {
@@ -47,20 +57,49 @@ const WaterStatusScreen = () => {
     setError(null);
     try {
       const data = await getWaterStatus(lat, lon);
+
+      // Parse location string (format: "City, District, State")
+      let locationObj = null;
+      if (typeof data.location === "string") {
+        const parts = data.location.split(", ");
+        locationObj = {
+          city: parts[0] || "—",
+          district: parts[1] || null,
+          state: parts[parts.length - 1] || "—",
+        };
+      } else if (data.location) {
+        locationObj = data.location;
+      }
+
       setWaterData({
-        waterAvailability: data.water_balance_mm,
-        status: data.status,
-        location: data.location,
+        waterAvailability: data.water_level_mm || data.water_balance_mm || 0,
+        waterPercentage: data.water_percentage || 0,
+        status: data.status?.toLowerCase() || "limited",
+        location: locationObj,
         solvency: data.solvency,
         weatherSummary: data.weather_summary,
         groundwaterCategory: data.groundwater_category,
+        lastUpdatedAt: data.last_updated_at,
+        forecastGeneratedAt: data.forecast_generated_at,
+        dataSource: data.data_source,
       });
+
+      // Also update userLocation with the fetched location for display
+      if (locationObj) {
+        setUserLocation(prev => ({
+          ...prev,
+          city: locationObj.city,
+          district: locationObj.district,
+          state: locationObj.state,
+        }));
+      }
     } catch (err) {
       console.error("Error fetching water status:", err);
       setError(err.message);
       // Use fallback data if API fails
       setWaterData({
         waterAvailability: 400,
+        waterPercentage: 80,
         status: "limited",
         location: { city: userLocation?.city || "—", state: userLocation?.state || "—" },
       });
@@ -85,52 +124,70 @@ const WaterStatusScreen = () => {
   };
 
   // Get user's location from state or API response
-  const locationDisplay = waterData?.location 
+  const locationDisplay = waterData?.location
     ? {
-        city: waterData.location.city ?? waterData.location.district ?? "—",
-        state: waterData.location.state ?? "—",
-      }
+      city: waterData.location.city ?? waterData.location.district ?? "—",
+      state: waterData.location.state ?? "—",
+    }
     : userLocation
-    ? {
+      ? {
         city: userLocation.city ?? userLocation.district ?? "—",
         state: userLocation.state ?? "—",
       }
-    : {
+      : {
         city: "—",
         state: "—",
       };
 
-  const MAX_WATER_CAPACITY = 1000;
+  const MAX_WATER_CAPACITY = 500; // 500mm = 100%
   const displayWaterData = waterData || {
     waterAvailability: 0,
+    waterPercentage: 0,
     status: "limited",
   };
 
   const statusConfig = {
-    safe: {
+    good: {
       color: "#2E7D32",
-      gradient: "from-[#2E7D32] to-[#43A047]",
+      gradient: "from-[#2E7D32] to-[#43A047]",  // Green (76-100%)
       icon: CheckCircle,
       label: t.status.safe,
       advisory: t.advisory.safe,
     },
-    limited: {
-      color: "#F9A825",
-      gradient: "from-[#F9A825] to-[#FBC02D]",
+    moderate: {
+      color: "#FBC02D",
+      gradient: "from-[#FBC02D] to-[#FFD54F]",  // Yellow (51-75%)
       icon: Info,
       label: t.status.limited,
       advisory: t.advisory.limited,
     },
+    low: {
+      color: "#F9A825",
+      gradient: "from-[#F9A825] to-[#FB8C00]",  // Orange (21-50%)
+      icon: AlertTriangle,
+      label: currentLanguage === "hi" ? "कम" : "LOW",
+      advisory: currentLanguage === "hi" ? "पानी की कमी। सावधानी से फसल चुनें।" : "Water shortage. Choose crops carefully.",
+    },
     critical: {
       color: "#E53935",
-      gradient: "from-[#E53935] to-[#EF5350]",
+      gradient: "from-[#E53935] to-[#EF5350]",  // Red (0-20%)
       icon: AlertTriangle,
       label: t.status.critical,
       advisory: t.advisory.critical,
     },
   };
 
-  const current = statusConfig[displayWaterData.status] || statusConfig.limited;
+  // Derive status from percentage with specified thresholds
+  const getStatusFromPercentage = (pct) => {
+    if (pct <= 20) return "critical";
+    if (pct <= 50) return "low";
+    if (pct <= 75) return "moderate";
+    return "good";
+  };
+
+  const waterPct = displayWaterData.waterPercentage || 0;
+  const derivedStatus = getStatusFromPercentage(waterPct);
+  const current = statusConfig[derivedStatus] || statusConfig.critical;
   const Icon = current.icon;
 
   const size = 260;
@@ -138,10 +195,10 @@ const WaterStatusScreen = () => {
   const radius = (size - strokeWidth) / 2 - 5;
   const center = size / 2;
   const circumference = 2 * Math.PI * radius;
-  const percentage = Math.min(
-    Math.max((displayWaterData.waterAvailability / MAX_WATER_CAPACITY) * 100, 5),
-    100,
-  );
+  // Use API water_percentage, or calculate from waterAvailability
+  const gaugePercentage = displayWaterData.waterPercentage ||
+    Math.min((displayWaterData.waterAvailability / MAX_WATER_CAPACITY) * 100, 100);
+  const percentage = Math.max(gaugePercentage, 5); // Minimum 5% for visibility
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   // --- REUSABLE GLASS STYLES ---
@@ -264,11 +321,13 @@ const WaterStatusScreen = () => {
                       />
                     )}
                   </div>
-                  <span className="text-7xl font-black text-white drop-shadow-md tracking-tighter leading-none">
-                    {isLoadingWater ? "..." : displayWaterData.waterAvailability}
+                  {/* Main percentage display */}
+                  <span className="text-6xl font-black text-white drop-shadow-md tracking-tighter leading-none">
+                    {isLoadingWater ? "..." : `${displayWaterData.waterPercentage || Math.round((displayWaterData.waterAvailability / 500) * 100)}%`}
                   </span>
-                  <span className="text-sm font-bold text-white/60 uppercase tracking-widest mt-2">
-                    {t.unit}
+                  {/* Secondary mm display */}
+                  <span className="text-sm font-medium text-white/70 mt-2">
+                    {isLoadingWater ? "" : `(${displayWaterData.waterAvailability} mm available)`}
                   </span>
                 </div>
               </div>
@@ -308,6 +367,31 @@ const WaterStatusScreen = () => {
                 </p>
               </div>
             </div>
+
+            {/* Last Updated Timestamp */}
+            {waterData?.forecastGeneratedAt && (
+              <div className={`${glassPillClass} rounded-2xl p-4 flex items-center gap-3`}>
+                <Clock size={18} className="text-white/60" />
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-white/50 uppercase tracking-wider">
+                    {currentLanguage === "hi" ? "अपडेट किया गया" : "Last Fetched"}
+                  </span>
+                  <span className="text-sm font-bold text-white">
+                    {new Date(waterData.forecastGeneratedAt).toLocaleString(
+                      currentLanguage === "hi" ? "hi-IN" : "en-IN",
+                      { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }
+                    )}
+                  </span>
+                </div>
+                {waterData?.dataSource && (
+                  <div className="ml-auto text-right">
+                    <span className="text-xs text-white/40">
+                      {currentLanguage === "hi" ? "स्रोत" : "Source"}: {waterData.dataSource.split(";")[0]}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </main>
       </div>

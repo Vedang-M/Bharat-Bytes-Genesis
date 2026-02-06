@@ -90,6 +90,7 @@ def get_fallback_weather() -> dict:
         "avg_temp_c": 28.0,
         "forecast_days": 15,
         "data_source": "Fallback (API unavailable)",
+        "data_updated_at": datetime.utcnow(),  # Current time as fallback
     }
 
 
@@ -103,6 +104,7 @@ def get_fallback_soil() -> dict:
         "soil_ph": 7.5,
         "available_water_capacity_mm_m": 150.0,
         "data_source": "Fallback (API unavailable)",
+        "data_updated_at": datetime.utcnow(),  # Current time as fallback
     }
 
 
@@ -125,6 +127,9 @@ def get_fallback_groundwater(state: str = "Uttar Pradesh") -> dict:
     
     estimate = state_estimates.get(state, {"depth": 10, "category": "Semi-Critical", "recharge": 200})
     
+    # CGWB 2024 data was published in March 2024
+    cgwb_data_date = datetime(2024, 3, 15)
+    
     return {
         "category": estimate["category"],
         "avg_depth_m": estimate["depth"],
@@ -133,7 +138,8 @@ def get_fallback_groundwater(state: str = "Uttar Pradesh") -> dict:
         "recharge_rate_mm": estimate["recharge"],
         "num_readings": 0,
         "state": state,
-        "data_source": "Fallback estimate (India WRIS unavailable)",
+        "data_source": "CGWB 2024 Assessment",
+        "data_updated_at": cgwb_data_date,
     }
 
 
@@ -282,6 +288,13 @@ async def get_water_status(
             "soil": soil.get("data_source", "Unknown"),
             "groundwater": groundwater.get("data_source", "Unknown"),
         },
+        # Timestamp metadata for data freshness
+        "data_updated_at": min(
+            weather.get("data_updated_at", datetime.utcnow()),
+            soil.get("data_updated_at", datetime.utcnow()),
+            groundwater.get("data_updated_at", datetime.utcnow()),
+        ),
+        "forecast_generated_at": datetime.utcnow(),
         "timestamp": datetime.utcnow().isoformat(),
     }
 

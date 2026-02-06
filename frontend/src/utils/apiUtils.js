@@ -61,9 +61,10 @@ async function authenticatedFetch(endpoint, options = {}) {
 
 /**
  * Get water status for a location (GET - Simplified)
+ * Requires authentication.
  */
 export async function getWaterStatus(latitude, longitude) {
-  return apiFetch(`/api/water-status?lat=${latitude}&lon=${longitude}`);
+  return authenticatedFetch(`/api/water-status?lat=${latitude}&lon=${longitude}`);
 }
 
 /**

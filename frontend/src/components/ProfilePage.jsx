@@ -166,13 +166,24 @@ const ProfilePage = () => {
     }
   }
 
-  // No user data found anywhere - show login prompt
-  if (!effectiveProfile && !isAuthenticated) {
+  // Still loading profile data - show loading state
+  // Note: ProtectedRoute already ensures user is authenticated before reaching here
+  if (!effectiveProfile && isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#422B06] flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-white animate-spin" />
+        <p className="text-white ml-4">Loading profile...</p>
+      </div>
+    );
+  }
+
+  // Fallback for edge case where profile is empty (show empty profile message)
+  if (!effectiveProfile) {
     return (
       <div className="min-h-screen bg-[#422B06] flex items-center justify-center">
         <div className="text-white text-center">
           <p className="text-xl mb-4">
-            {currentLanguage === "hi" ? "कृपया पहले लॉगिन करें" : "Please login first"}
+            {currentLanguage === "hi" ? "प्रोफ़ाइल नहीं मिली" : "Profile not found"}
           </p>
           <button
             onClick={() => navigate("/")}

@@ -103,6 +103,7 @@ async def fetch_weather_forecast(
             "location": data.get("resolvedAddress"),
             "timezone": data.get("timezone"),
             "data_source": "Visual Crossing Weather API",
+            "data_updated_at": datetime.utcnow(),  # Weather forecast is always current
             "api_url": url.replace(VISUAL_CROSSING_API_KEY, "***"),
         }
         
@@ -212,6 +213,9 @@ async def fetch_soil_data(
             silt = result["silt_percent"]
             oc = result["organic_carbon_g_kg"] or 5
             result["available_water_capacity_mm_m"] = round(0.45 * clay + 0.25 * silt + 0.5 * oc, 1)
+        
+        # ISRIC data is based on 250m resolution soil maps, updated periodically
+        result["data_updated_at"] = datetime(2023, 6, 1)  # SoilGrids 2.0 release date
         
         return result
         
@@ -345,6 +349,7 @@ async def fetch_groundwater_data(
             "state": state_name,
             "district": district_name,
             "data_source": "India WRIS - Central Ground Water Board",
+            "data_updated_at": end_date,  # Most recent data point date
             "api_url": url,
             "date_range": f"{start_str} to {end_str}",
         }

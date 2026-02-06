@@ -66,9 +66,11 @@ class WaterStatusSimpleResponse(BaseModel):
     latitude: float
     longitude: float
     water_level_mm: float = Field(..., description="Available water in mm")
+    water_percentage: float = Field(..., description="Water availability as percentage (0-100%, 500mm=100%)")
     status: str = Field(..., description="CRITICAL, LOW, MODERATE, or GOOD")
-    last_updated_at: datetime
-    data_source: str
+    last_updated_at: datetime = Field(..., description="When source data was last updated (ISO 8601)")
+    forecast_generated_at: datetime = Field(..., description="When this prediction was generated (ISO 8601)")
+    data_source: str = Field(..., description="Data sources used (e.g., 'India-WRIS, IMD')")
 
 
 class CropViabilityResponse(BaseModel):
