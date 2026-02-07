@@ -69,20 +69,22 @@ export async function getWaterStatus(latitude, longitude) {
 
 /**
  * Check if a crop is viable for a location (GET - Simplified)
+ * Requires authentication.
  */
 export async function checkCropViability(cropId, latitude, longitude, waterMm = null) {
   let url = `/api/crop-check/${cropId}?lat=${latitude}&lon=${longitude}`;
   if (waterMm !== null) {
     url += `&water_mm=${waterMm}`;
   }
-  return apiFetch(url);
+  return authenticatedFetch(url);
 }
 
 /**
  * Get alternative crop recommendations (Smart-Swap)
+ * Requires authentication.
  */
 export async function getSmartSwap(rejectedCropId, waterMm, maxResults = 3) {
-  return apiFetch(`/api/smart-swap/${rejectedCropId}?water_mm=${waterMm}&max_results=${maxResults}`);
+  return authenticatedFetch(`/api/smart-swap/${rejectedCropId}?water_mm=${waterMm}&max_results=${maxResults}`);
 }
 
 /**

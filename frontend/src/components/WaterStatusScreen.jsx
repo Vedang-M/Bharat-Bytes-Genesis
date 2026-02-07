@@ -71,8 +71,10 @@ const WaterStatusScreen = () => {
         locationObj = data.location;
       }
 
+      const waterAvailability = data.water_level_mm || data.water_balance_mm || 0;
+      
       setWaterData({
-        waterAvailability: data.water_level_mm || data.water_balance_mm || 0,
+        waterAvailability: waterAvailability,
         waterPercentage: data.water_percentage || 0,
         status: data.status?.toLowerCase() || "limited",
         location: locationObj,
@@ -83,6 +85,14 @@ const WaterStatusScreen = () => {
         forecastGeneratedAt: data.forecast_generated_at,
         dataSource: data.data_source,
       });
+
+      // Store water data in sessionStorage for use in crop check
+      sessionStorage.setItem('waterData', JSON.stringify({
+        waterAvailability: waterAvailability,
+        lat: lat,
+        lon: lon,
+        timestamp: Date.now(),
+      }));
 
       // Also update userLocation with the fetched location for display
       if (locationObj) {

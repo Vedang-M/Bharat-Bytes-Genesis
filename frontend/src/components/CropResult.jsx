@@ -42,6 +42,23 @@ const CropResult = ({ selectedCrop: propSelectedCrop }) => {
     }
   };
 
+  // Get cached water data from sessionStorage
+  const getCachedWaterData = (currentLat, currentLon) => {
+    try {
+      const stored = sessionStorage.getItem('waterData');
+      if (!stored) return null;
+      const data = JSON.parse(stored);
+      // Check if data is recent (within 10 minutes) and for same location
+      const isRecent = Date.now() - data.timestamp < 10 * 60 * 1000;
+      // Check if location matches (within ~100m)
+      const latMatch = Math.abs(data.lat - currentLat) < 0.001;
+      const lonMatch = Math.abs(data.lon - currentLon) < 0.001;
+      return (isRecent && latMatch && lonMatch) ? data : null;
+    } catch {
+      return null;
+    }
+  };
+
   // Fetch crop viability on mount
   useEffect(() => {
     const fetchCropViability = async () => {
@@ -63,9 +80,13 @@ const CropResult = ({ selectedCrop: propSelectedCrop }) => {
         return;
       }
 
+      // Get cached water data if available for consistent values
+      const cachedWater = getCachedWaterData(lat, lon);
+      const waterMm = cachedWater?.waterAvailability || null;
+
       setIsLoading(true);
       try {
-        const data = await checkCropViability(selectedCrop.id, lat, lon);
+        const data = await checkCropViability(selectedCrop.id, lat, lon, waterMm);
         
         setCropData({
           id: data.crop_id,
