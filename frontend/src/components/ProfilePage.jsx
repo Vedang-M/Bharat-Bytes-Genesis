@@ -12,6 +12,7 @@ import {
   Globe,
   ChevronRight,
   Loader2,
+  LayoutDashboard,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { updateUserData, logoutUser } from "../utils/authUtils";
@@ -23,7 +24,13 @@ import {
 
 const ProfilePage = () => {
   const navigate = useNavigate();
-  const { currentUser, userProfile, loading, refreshUserProfile, isAuthenticated } = useAuth();
+  const {
+    currentUser,
+    userProfile,
+    loading,
+    refreshUserProfile,
+    isAuthenticated,
+  } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState({
     name: "",
@@ -121,14 +128,15 @@ const ProfilePage = () => {
 
   // Format registration date safely
   const formatDate = (dateValue) => {
-    if (!dateValue) return currentLanguage === "hi" ? "उपलब्ध नहीं" : "Not available";
+    if (!dateValue)
+      return currentLanguage === "hi" ? "उपलब्ध नहीं" : "Not available";
 
     try {
       // Handle Firestore Timestamp
       if (dateValue?.toDate) {
-        return dateValue.toDate().toLocaleDateString(
-          currentLanguage === "hi" ? "hi-IN" : "en-IN"
-        );
+        return dateValue
+          .toDate()
+          .toLocaleDateString(currentLanguage === "hi" ? "hi-IN" : "en-IN");
       }
       // Handle ISO string or Date object
       const date = new Date(dateValue);
@@ -136,7 +144,7 @@ const ProfilePage = () => {
         return currentLanguage === "hi" ? "उपलब्ध नहीं" : "Not available";
       }
       return date.toLocaleDateString(
-        currentLanguage === "hi" ? "hi-IN" : "en-IN"
+        currentLanguage === "hi" ? "hi-IN" : "en-IN",
       );
     } catch {
       return currentLanguage === "hi" ? "उपलब्ध नहीं" : "Not available";
@@ -183,7 +191,9 @@ const ProfilePage = () => {
       <div className="min-h-screen bg-[#422B06] flex items-center justify-center">
         <div className="text-white text-center">
           <p className="text-xl mb-4">
-            {currentLanguage === "hi" ? "प्रोफ़ाइल नहीं मिली" : "Profile not found"}
+            {currentLanguage === "hi"
+              ? "प्रोफ़ाइल नहीं मिली"
+              : "Profile not found"}
           </p>
           <button
             onClick={() => navigate("/")}
@@ -209,9 +219,16 @@ const ProfilePage = () => {
     "bg-gradient-to-r from-blue-500/90 to-indigo-600/90 hover:from-blue-500 hover:to-indigo-600 text-white shadow-lg shadow-blue-900/20 border border-blue-400/30 backdrop-blur-md";
 
   // Display values with fallbacks - use effectiveProfile which includes localStorage data
-  const displayName = effectiveProfile?.name || currentUser?.displayName || (currentLanguage === "hi" ? "उपयोगकर्ता" : "User");
-  const displayPhone = effectiveProfile?.phone || (currentLanguage === "hi" ? "उपलब्ध नहीं" : "Not set");
-  const displayDate = formatDate(effectiveProfile?.registeredAt || effectiveProfile?.createdAt);
+  const displayName =
+    effectiveProfile?.name ||
+    currentUser?.displayName ||
+    (currentLanguage === "hi" ? "उपयोगकर्ता" : "User");
+  const displayPhone =
+    effectiveProfile?.phone ||
+    (currentLanguage === "hi" ? "उपलब्ध नहीं" : "Not set");
+  const displayDate = formatDate(
+    effectiveProfile?.registeredAt || effectiveProfile?.createdAt,
+  );
 
   return (
     <div className="min-h-screen bg-[#FAFAF7] font-hindi relative flex flex-col">
@@ -267,6 +284,23 @@ const ProfilePage = () => {
 
             {/* Desktop-only Action Buttons (Stacked) */}
             <div className="hidden lg:flex flex-col gap-4">
+              {userProfile?.role === "sarpanch" && (
+                <button
+                  onClick={() => navigate("/authority/sarpanch")}
+                  className="bg-gradient-to-r from-[#2E7D32] to-[#43A047] w-full flex items-center justify-between px-6 py-4 rounded-[1.5rem] transition-all group shadow-lg border border-white/20"
+                >
+                  <div className="flex items-center gap-3 text-white">
+                    <LayoutDashboard size={22} />
+                    <span className="font-black text-lg">
+                      {currentLanguage === "hi"
+                        ? "सरपंच डैशबोर्ड"
+                        : "Sarpanch Dashboard"}
+                    </span>
+                  </div>
+                  <ChevronRight className="text-white opacity-70 group-hover:translate-x-1 transition-transform" />
+                </button>
+              )}
+
               <button
                 onClick={handleLanguageToggle}
                 className={`${langBtnClass} w-full flex items-center justify-between px-6 py-4 rounded-[1.5rem] transition-all group`}
@@ -308,7 +342,11 @@ const ProfilePage = () => {
                       value={editedData.name}
                       onChange={handleInputChange}
                       className={`w-full ${glassInputClass} rounded-2xl px-5 py-4 font-bold outline-none transition-all`}
-                      placeholder={currentLanguage === "hi" ? "अपना नाम दर्ज करें" : "Enter your name"}
+                      placeholder={
+                        currentLanguage === "hi"
+                          ? "अपना नाम दर्ज करें"
+                          : "Enter your name"
+                      }
                     />
                   ) : (
                     <div className="px-1 py-2 border-b border-white/10">
@@ -333,7 +371,11 @@ const ProfilePage = () => {
                       value={editedData.phone}
                       onChange={handleInputChange}
                       className={`w-full ${glassInputClass} rounded-2xl px-5 py-4 font-bold outline-none transition-all`}
-                      placeholder={currentLanguage === "hi" ? "फोन नंबर दर्ज करें" : "Enter phone number"}
+                      placeholder={
+                        currentLanguage === "hi"
+                          ? "फोन नंबर दर्ज करें"
+                          : "Enter phone number"
+                      }
                     />
                   ) : (
                     <div className="px-1 py-2 border-b border-white/10">
@@ -365,7 +407,11 @@ const ProfilePage = () => {
                     disabled={saving}
                     className="flex-1 bg-gradient-to-r from-[#2E7D32] to-[#43A047] text-white rounded-2xl py-4 font-black flex items-center justify-center gap-2 shadow-lg hover:shadow-[#2E7D32]/40 active:scale-95 transition-all border border-white/20 disabled:opacity-50"
                   >
-                    {saving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                    {saving ? (
+                      <Loader2 className="animate-spin" size={20} />
+                    ) : (
+                      <Save size={20} />
+                    )}
                     {t.save}
                   </button>
                   <button
@@ -381,6 +427,18 @@ const ProfilePage = () => {
 
             {/* Mobile-only Action Buttons */}
             <div className="lg:hidden flex flex-col gap-4 mt-2">
+              {userProfile?.role === "sarpanch" && (
+                <button
+                  onClick={() => navigate("/authority/sarpanch")}
+                  className="bg-gradient-to-r from-[#2E7D32] to-[#43A047] w-full flex items-center justify-center gap-3 rounded-[1.5rem] py-5 font-black active:scale-95 transition-all text-white shadow-lg border border-white/20"
+                >
+                  <LayoutDashboard size={20} />
+                  {currentLanguage === "hi"
+                    ? "सरपंच डैशबोर्ड"
+                    : "Sarpanch Dashboard"}
+                </button>
+              )}
+
               <button
                 onClick={handleLanguageToggle}
                 className={`${langBtnClass} w-full flex items-center justify-center gap-3 rounded-[1.5rem] py-5 font-black active:scale-95 transition-all`}

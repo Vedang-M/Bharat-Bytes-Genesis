@@ -45,7 +45,7 @@ const CropResult = ({ selectedCrop: propSelectedCrop }) => {
   // Get cached water data from sessionStorage
   const getCachedWaterData = (currentLat, currentLon) => {
     try {
-      const stored = sessionStorage.getItem('waterData');
+      const stored = sessionStorage.getItem("waterData");
       if (!stored) return null;
       const data = JSON.parse(stored);
       // Check if data is recent (within 10 minutes) and for same location
@@ -53,7 +53,7 @@ const CropResult = ({ selectedCrop: propSelectedCrop }) => {
       // Check if location matches (within ~100m)
       const latMatch = Math.abs(data.lat - currentLat) < 0.001;
       const lonMatch = Math.abs(data.lon - currentLon) < 0.001;
-      return (isRecent && latMatch && lonMatch) ? data : null;
+      return isRecent && latMatch && lonMatch ? data : null;
     } catch {
       return null;
     }
@@ -64,7 +64,7 @@ const CropResult = ({ selectedCrop: propSelectedCrop }) => {
     const fetchCropViability = async () => {
       const selectedCrop = getSelectedCrop();
       const location = getSavedLocation();
-      
+
       if (!selectedCrop?.id) {
         setError("No crop selected");
         setIsLoading(false);
@@ -86,8 +86,13 @@ const CropResult = ({ selectedCrop: propSelectedCrop }) => {
 
       setIsLoading(true);
       try {
-        const data = await checkCropViability(selectedCrop.id, lat, lon, waterMm);
-        
+        const data = await checkCropViability(
+          selectedCrop.id,
+          lat,
+          lon,
+          waterMm,
+        );
+
         setCropData({
           id: data.crop_id,
           name: language === "hi" ? data.crop_name_hi : data.crop_name,
@@ -103,18 +108,25 @@ const CropResult = ({ selectedCrop: propSelectedCrop }) => {
           message: data.message,
           messageEn: data.message_en,
           isViable: data.is_viable,
-          yieldPrediction: data.is_viable 
-            ? t.advice.defaultYield 
+          yieldPrediction: data.is_viable
+            ? t.advice.defaultYield
             : t.advice.yieldReduced,
-          tips: data.is_viable 
-            ? t.advice.defaultTips 
+          tips: data.is_viable
+            ? t.advice.defaultTips
             : t.advice.waterSavingTips,
         });
 
         // If crop is not recommended, fetch alternatives
-        if (data.recommendation === "not-recommended" && data.water_available_mm > 0) {
+        if (
+          data.recommendation === "not-recommended" &&
+          data.water_available_mm > 0
+        ) {
           try {
-            const altData = await getSmartSwap(data.crop_id, data.water_available_mm, 3);
+            const altData = await getSmartSwap(
+              data.crop_id,
+              data.water_available_mm,
+              3,
+            );
             setAlternatives(altData.recommendations || []);
           } catch (altErr) {
             console.error("Error fetching alternatives:", altErr);
@@ -123,7 +135,7 @@ const CropResult = ({ selectedCrop: propSelectedCrop }) => {
       } catch (err) {
         console.error("Error fetching crop viability:", err);
         setError(err.message);
-        
+
         // Use fallback data
         const fallbackCrop = getSelectedCrop();
         setCropData({
@@ -169,7 +181,9 @@ const CropResult = ({ selectedCrop: propSelectedCrop }) => {
     },
   };
 
-  const current = recommendationConfig[cropData?.recommendation] || recommendationConfig.caution;
+  const current =
+    recommendationConfig[cropData?.recommendation] ||
+    recommendationConfig.caution;
   const Icon = current.icon;
 
   // --- REUSABLE GLASS STYLES (MATCHING PREVIOUS SCREENS) ---
@@ -196,7 +210,9 @@ const CropResult = ({ selectedCrop: propSelectedCrop }) => {
         <div className="relative z-10 flex flex-col items-center gap-4">
           <Loader2 size={48} className="text-white animate-spin" />
           <p className="text-white text-xl font-bold">
-            {language === "hi" ? "फसल विश्लेषण हो रहा है..." : "Analyzing crop..."}
+            {language === "hi"
+              ? "फसल विश्लेषण हो रहा है..."
+              : "Analyzing crop..."}
           </p>
         </div>
       </div>
@@ -208,7 +224,7 @@ const CropResult = ({ selectedCrop: propSelectedCrop }) => {
     return (
       <div className="min-h-screen bg-[#FAFAF7] font-hindi relative flex flex-col items-center justify-center">
         <p className="text-xl">{error || "No crop data available"}</p>
-        <button 
+        <button
           onClick={() => navigate("/crops")}
           className="mt-4 px-6 py-3 bg-green-600 text-white rounded-full"
         >
@@ -224,17 +240,17 @@ const CropResult = ({ selectedCrop: propSelectedCrop }) => {
       <img
         src="/Hero-image-desktop.webp"
         alt=""
-        className="absolute inset-0 w-full h-full object-cover object-center hidden md:block"
+        className="fixed inset-0 w-full h-full object-cover object-center hidden md:block"
       />
       <img
         src="/Hero-inmage-mobile.webp"
         alt=""
-        className="absolute inset-0 w-full h-full object-cover object-center block md:hidden"
+        className="fixed inset-0 w-full h-full object-cover object-center block md:hidden"
       />
       {/* Dark Overlay - Consistent opacity */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#422B06]/80 to-[#422B06]/50" />
+      <div className="fixed inset-0 bg-gradient-to-b from-[#422B06]/80 to-[#422B06]/50" />
 
-      <div className="relative z-10 max-w-md lg:max-w-5xl mx-auto px-5 pt-4 pb-28 md:pb-8 md:pt-24 flex flex-col flex-1 w-full overflow-y-auto md:overflow-hidden md:h-full">
+      <div className="relative z-10 max-w-md lg:max-w-5xl mx-auto px-5 pt-4 pb-28 md:pb-8 md:pt-24 flex flex-col flex-1 w-full overflow-y-auto custom-scrollbar">
         {/* Header - Using glassPillClass */}
         <header
           className={`mb-6 ${glassPillClass} p-5 rounded-[2.5rem] flex-shrink-0`}
@@ -265,7 +281,7 @@ const CropResult = ({ selectedCrop: propSelectedCrop }) => {
                 <img
                   src={cropData.image}
                   alt={cropData.name}
-                  className="w-24 h-24 md:w-28 md:h-28 object-contain drop-shadow-2xl relative z-10"
+                  className="w-32 h-32 md:w-48 md:h-48 object-contain drop-shadow-2xl relative z-10"
                 />
                 {/* Subtle glow behind image */}
                 <div className="absolute inset-0 bg-white/20 blur-2xl -z-10 rounded-full" />
@@ -364,8 +380,8 @@ const CropResult = ({ selectedCrop: propSelectedCrop }) => {
           </div>
 
           {/* Fertilizer Ad - Government Approved */}
-          <FertilizerAd 
-            crop={cropData.id} 
+          <FertilizerAd
+            crop={cropData.id}
             region={getSavedLocation()?.state || getSavedLocation()?.district}
             language={language}
           />

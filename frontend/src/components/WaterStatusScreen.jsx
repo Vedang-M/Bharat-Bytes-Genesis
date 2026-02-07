@@ -71,8 +71,9 @@ const WaterStatusScreen = () => {
         locationObj = data.location;
       }
 
-      const waterAvailability = data.water_level_mm || data.water_balance_mm || 0;
-      
+      const waterAvailability =
+        data.water_level_mm || data.water_balance_mm || 0;
+
       setWaterData({
         waterAvailability: waterAvailability,
         waterPercentage: data.water_percentage || 0,
@@ -87,16 +88,19 @@ const WaterStatusScreen = () => {
       });
 
       // Store water data in sessionStorage for use in crop check
-      sessionStorage.setItem('waterData', JSON.stringify({
-        waterAvailability: waterAvailability,
-        lat: lat,
-        lon: lon,
-        timestamp: Date.now(),
-      }));
+      sessionStorage.setItem(
+        "waterData",
+        JSON.stringify({
+          waterAvailability: waterAvailability,
+          lat: lat,
+          lon: lon,
+          timestamp: Date.now(),
+        }),
+      );
 
       // Also update userLocation with the fetched location for display
       if (locationObj) {
-        setUserLocation(prev => ({
+        setUserLocation((prev) => ({
           ...prev,
           city: locationObj.city,
           district: locationObj.district,
@@ -111,7 +115,10 @@ const WaterStatusScreen = () => {
         waterAvailability: 400,
         waterPercentage: 80,
         status: "limited",
-        location: { city: userLocation?.city || "—", state: userLocation?.state || "—" },
+        location: {
+          city: userLocation?.city || "—",
+          state: userLocation?.state || "—",
+        },
       });
     } finally {
       setIsLoadingWater(false);
@@ -136,18 +143,18 @@ const WaterStatusScreen = () => {
   // Get user's location from state or API response
   const locationDisplay = waterData?.location
     ? {
-      city: waterData.location.city ?? waterData.location.district ?? "—",
-      state: waterData.location.state ?? "—",
-    }
+        city: waterData.location.city ?? waterData.location.district ?? "—",
+        state: waterData.location.state ?? "—",
+      }
     : userLocation
       ? {
-        city: userLocation.city ?? userLocation.district ?? "—",
-        state: userLocation.state ?? "—",
-      }
+          city: userLocation.city ?? userLocation.district ?? "—",
+          state: userLocation.state ?? "—",
+        }
       : {
-        city: "—",
-        state: "—",
-      };
+          city: "—",
+          state: "—",
+        };
 
   const MAX_WATER_CAPACITY = 500; // 500mm = 100%
   const displayWaterData = waterData || {
@@ -159,28 +166,31 @@ const WaterStatusScreen = () => {
   const statusConfig = {
     good: {
       color: "#2E7D32",
-      gradient: "from-[#2E7D32] to-[#43A047]",  // Green (76-100%)
+      gradient: "from-[#2E7D32] to-[#43A047]", // Green (76-100%)
       icon: CheckCircle,
       label: t.status.safe,
       advisory: t.advisory.safe,
     },
     moderate: {
       color: "#FBC02D",
-      gradient: "from-[#FBC02D] to-[#FFD54F]",  // Yellow (51-75%)
+      gradient: "from-[#FBC02D] to-[#FFD54F]", // Yellow (51-75%)
       icon: Info,
       label: t.status.limited,
       advisory: t.advisory.limited,
     },
     low: {
       color: "#F9A825",
-      gradient: "from-[#F9A825] to-[#FB8C00]",  // Orange (21-50%)
+      gradient: "from-[#F9A825] to-[#FB8C00]", // Orange (21-50%)
       icon: AlertTriangle,
       label: currentLanguage === "hi" ? "कम" : "LOW",
-      advisory: currentLanguage === "hi" ? "पानी की कमी। सावधानी से फसल चुनें।" : "Water shortage. Choose crops carefully.",
+      advisory:
+        currentLanguage === "hi"
+          ? "पानी की कमी। सावधानी से फसल चुनें।"
+          : "Water shortage. Choose crops carefully.",
     },
     critical: {
       color: "#E53935",
-      gradient: "from-[#E53935] to-[#EF5350]",  // Red (0-20%)
+      gradient: "from-[#E53935] to-[#EF5350]", // Red (0-20%)
       icon: AlertTriangle,
       label: t.status.critical,
       advisory: t.advisory.critical,
@@ -206,8 +216,12 @@ const WaterStatusScreen = () => {
   const center = size / 2;
   const circumference = 2 * Math.PI * radius;
   // Use API water_percentage, or calculate from waterAvailability
-  const gaugePercentage = displayWaterData.waterPercentage ||
-    Math.min((displayWaterData.waterAvailability / MAX_WATER_CAPACITY) * 100, 100);
+  const gaugePercentage =
+    displayWaterData.waterPercentage ||
+    Math.min(
+      (displayWaterData.waterAvailability / MAX_WATER_CAPACITY) * 100,
+      100,
+    );
   const percentage = Math.max(gaugePercentage, 5); // Minimum 5% for visibility
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
@@ -224,15 +238,15 @@ const WaterStatusScreen = () => {
       <img
         src="/Hero-image-desktop.webp"
         alt=""
-        className="absolute inset-0 w-full h-full object-cover hidden md:block"
+        className="fixed inset-0 w-full h-full object-cover hidden md:block"
       />
       <img
         src="/Hero-inmage-mobile.webp"
         alt=""
-        className="absolute inset-0 w-full h-full object-cover block md:hidden"
+        className="fixed inset-0 w-full h-full object-cover block md:hidden"
       />
       {/* Dark Overlay - slightly adjusted to match the warmth of the reference */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#422B06]/80 to-[#422B06]/50" />
+      <div className="fixed inset-0 bg-gradient-to-b from-[#422B06]/80 to-[#422B06]/50" />
 
       <div className="relative z-10 max-w-md lg:max-w-5xl mx-auto px-5 pt-4 pb-40 md:pb-10 md:pt-24 flex flex-col flex-1 w-full gap-6 md:h-full md:overflow-hidden md:justify-between">
         {/* Header - Using glassPillClass to match other pages */}
@@ -319,10 +333,7 @@ const WaterStatusScreen = () => {
                   {/* Inner small glass bubble */}
                   <div className="bg-white/10 p-3 rounded-full shadow-inner mb-2 backdrop-blur-sm border border-white/5">
                     {isLoadingWater ? (
-                      <Loader2
-                        size={32}
-                        className="text-white animate-spin"
-                      />
+                      <Loader2 size={32} className="text-white animate-spin" />
                     ) : (
                       <Droplet
                         size={32}
@@ -333,11 +344,15 @@ const WaterStatusScreen = () => {
                   </div>
                   {/* Main percentage display */}
                   <span className="text-6xl font-black text-white drop-shadow-md tracking-tighter leading-none">
-                    {isLoadingWater ? "..." : `${displayWaterData.waterPercentage || Math.round((displayWaterData.waterAvailability / 500) * 100)}%`}
+                    {isLoadingWater
+                      ? "..."
+                      : `${displayWaterData.waterPercentage || Math.round((displayWaterData.waterAvailability / 500) * 100)}%`}
                   </span>
                   {/* Secondary mm display */}
                   <span className="text-sm font-medium text-white/70 mt-2">
-                    {isLoadingWater ? "" : `(${displayWaterData.waterAvailability} mm available)`}
+                    {isLoadingWater
+                      ? ""
+                      : `(${displayWaterData.waterAvailability} mm available)`}
                   </span>
                 </div>
               </div>
@@ -380,23 +395,33 @@ const WaterStatusScreen = () => {
 
             {/* Last Updated Timestamp */}
             {waterData?.forecastGeneratedAt && (
-              <div className={`${glassPillClass} rounded-2xl p-4 flex items-center gap-3`}>
+              <div
+                className={`${glassPillClass} rounded-2xl p-4 flex items-center gap-3`}
+              >
                 <Clock size={18} className="text-white/60" />
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-white/50 uppercase tracking-wider">
-                    {currentLanguage === "hi" ? "अपडेट किया गया" : "Last Fetched"}
+                    {currentLanguage === "hi"
+                      ? "अपडेट किया गया"
+                      : "Last Fetched"}
                   </span>
                   <span className="text-sm font-bold text-white">
                     {new Date(waterData.forecastGeneratedAt).toLocaleString(
                       currentLanguage === "hi" ? "hi-IN" : "en-IN",
-                      { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }
+                      {
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      },
                     )}
                   </span>
                 </div>
                 {waterData?.dataSource && (
                   <div className="ml-auto text-right">
                     <span className="text-xs text-white/40">
-                      {currentLanguage === "hi" ? "स्रोत" : "Source"}: {waterData.dataSource.split(";")[0]}
+                      {currentLanguage === "hi" ? "स्रोत" : "Source"}:{" "}
+                      {waterData.dataSource.split(";")[0]}
                     </span>
                   </div>
                 )}

@@ -190,17 +190,17 @@ const CropSelect = () => {
       <img
         src="/Hero-image-desktop.webp"
         alt=""
-        className="absolute inset-0 w-full h-full object-cover object-center hidden md:block"
+        className="fixed inset-0 w-full h-full object-cover object-center hidden md:block"
       />
       <img
         src="/Hero-inmage-mobile.webp"
         alt=""
-        className="absolute inset-0 w-full h-full object-cover object-center block md:hidden"
+        className="fixed inset-0 w-full h-full object-cover object-center block md:hidden"
       />
       {/* Dark Overlay - Matched to previous screen opacity (80->50) */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#422B06]/80 to-[#422B06]/50" />
+      <div className="fixed inset-0 bg-gradient-to-b from-[#422B06]/80 to-[#422B06]/50" />
 
-      <div className="relative z-10 max-w-md lg:max-w-5xl mx-auto px-5 pt-4 pb-28 md:pb-8 md:pt-24 flex flex-col flex-1 w-full overflow-y-auto md:overflow-hidden md:h-full">
+      <div className="relative z-10 max-w-md lg:max-w-5xl mx-auto px-5 pt-4 pb-28 md:pb-8 md:pt-24 flex flex-col flex-1 w-full overflow-y-auto custom-scrollbar">
         {/* Enhanced Header - Using glassPillClass */}
         <header
           className={`mb-6 ${glassPillClass} p-5 rounded-[2.5rem] flex-shrink-0`}
@@ -362,7 +362,7 @@ const CropSelect = () => {
                   <img
                     src={crop.image}
                     alt={crop.name}
-                    className={`w-24 h-24 md:w-28 md:h-28 object-contain drop-shadow-2xl transition-transform duration-500 
+                    className={`w-32 h-32 md:w-48 md:h-48 object-contain drop-shadow-2xl transition-transform duration-500 
                       ${isSelected ? "scale-110" : "group-hover:scale-105"}`}
                   />
                   {isSelected && (
