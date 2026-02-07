@@ -36,7 +36,7 @@ const CropSelect = () => {
       try {
         const data = await getCropsList();
         // Map API response to expected format
-        const mappedCrops = data.crops.map(crop => ({
+        const mappedCrops = data.crops.map((crop) => ({
           id: crop.id,
           name: language === "hi" ? crop.name_hi : crop.name_en,
           nameHi: crop.name_hi,
@@ -63,12 +63,54 @@ const CropSelect = () => {
 
   // Default crops fallback
   const getDefaultCrops = (translations) => [
-    { id: "sugarcane", name: translations.crops.cropNames.sugarcane, image: "/sugarcane.webp", waterNeed: "high" },
-    { id: "paddy", name: translations.crops.cropNames.paddy, image: "/rice.webp", waterNeed: "high" },
-    { id: "wheat", name: translations.crops.cropNames.wheat, image: "/wheat.webp", waterNeed: "medium" },
-    { id: "mustard", name: translations.crops.cropNames.mustard, image: "/mustard.webp", waterNeed: "low" },
-    { id: "chickpea", name: translations.crops.cropNames.chickpea, image: "/chickpea.webp", waterNeed: "low" },
-    { id: "cotton", name: translations.crops.cropNames.cotton, image: "/cotton.webp", waterNeed: "medium" },
+    {
+      id: "sugarcane",
+      name: translations.crops.cropNames.sugarcane,
+      image: "/sugarcane.webp",
+      waterNeed: "high",
+    },
+    {
+      id: "paddy",
+      name: translations.crops.cropNames.paddy,
+      image: "/rice.webp",
+      waterNeed: "high",
+    },
+    {
+      id: "wheat",
+      name: translations.crops.cropNames.wheat,
+      image: "/wheat.webp",
+      waterNeed: "medium",
+    },
+    {
+      id: "mustard",
+      name: translations.crops.cropNames.mustard,
+      image: "/mustard.webp",
+      waterNeed: "low",
+    },
+    {
+      id: "chickpea",
+      name: translations.crops.cropNames.chickpea,
+      image: "/chickpea.webp",
+      waterNeed: "low",
+    },
+    {
+      id: "cotton",
+      name: translations.crops.cropNames.cotton,
+      image: "/cotton.webp",
+      waterNeed: "medium",
+    },
+    {
+      id: "maize",
+      name: translations.crops.cropNames.maize || "Maize",
+      image: "/corn.webp",
+      waterNeed: "medium",
+    },
+    {
+      id: "potato",
+      name: translations.crops.cropNames.potato || "Potato",
+      image: "/potato.webp",
+      waterNeed: "medium",
+    },
   ];
 
   const handleSelect = (crop) => {
@@ -77,11 +119,14 @@ const CropSelect = () => {
 
     // Store selected crop in sessionStorage for CropResult page
     const location = getSavedLocation();
-    sessionStorage.setItem("selectedCrop", JSON.stringify({
-      ...crop,
-      latitude: location?.latitude,
-      longitude: location?.longitude,
-    }));
+    sessionStorage.setItem(
+      "selectedCrop",
+      JSON.stringify({
+        ...crop,
+        latitude: location?.latitude,
+        longitude: location?.longitude,
+      }),
+    );
 
     // Navigate to advice (crop result) page
     setTimeout(() => {
@@ -96,20 +141,22 @@ const CropSelect = () => {
     setIsCheckingViability(true);
     try {
       const location = getSavedLocation();
-      const response = await fetch('http://localhost:8000/api/sowing-swap', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("http://localhost:8000/api/sowing-swap", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           current_crop: plannedCrop,
           available_water_mm: 500, // Default value, can be fetched from water status
           season: season,
-          location: location ? `${location.latitude},${location.longitude}` : null,
-          land_size_acres: landSize ? parseFloat(landSize) : null
-        })
+          location: location
+            ? `${location.latitude},${location.longitude}`
+            : null,
+          land_size_acres: landSize ? parseFloat(landSize) : null,
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to check viability');
+        throw new Error("Failed to check viability");
       }
 
       const data = await response.json();
@@ -174,13 +221,17 @@ const CropSelect = () => {
         </header>
 
         {/* Planning Your Crop Section */}
-        <div className={`mb-6 ${glassCardClass} p-5 rounded-[2rem] flex-shrink-0`}>
+        <div
+          className={`mb-6 ${glassCardClass} p-5 rounded-[2rem] flex-shrink-0`}
+        >
           <div className="flex items-center gap-3 mb-4">
             <div className="bg-gradient-to-br from-[#1565C0] to-[#42A5F5] p-2.5 rounded-xl shadow-lg">
               <Leaf size={24} className="text-white" />
             </div>
             <h2 className="text-xl md:text-2xl font-bold text-white drop-shadow-md">
-              {language === "hi" ? "अपनी फसल की योजना बनाएं?" : "Planning Your Crop?"}
+              {language === "hi"
+                ? "अपनी फसल की योजना बनाएं?"
+                : "Planning Your Crop?"}
             </h2>
           </div>
 
@@ -199,7 +250,11 @@ const CropSelect = () => {
                   {language === "hi" ? "फसल चुनें..." : "Select crop..."}
                 </option>
                 {crops.map((crop) => (
-                  <option key={crop.id} value={crop.id} className="text-gray-800">
+                  <option
+                    key={crop.id}
+                    value={crop.id}
+                    className="text-gray-800"
+                  >
                     {crop.name}
                   </option>
                 ))}
@@ -248,9 +303,10 @@ const CropSelect = () => {
                 onClick={checkCropViability}
                 disabled={!plannedCrop || isCheckingViability}
                 className={`w-full md:w-auto px-6 py-2.5 rounded-xl font-bold text-white shadow-lg transition-all duration-300
-                  ${plannedCrop && !isCheckingViability
-                    ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 hover:shadow-green-500/30 hover:shadow-xl active:scale-95"
-                    : "bg-gray-500/50 cursor-not-allowed"
+                  ${
+                    plannedCrop && !isCheckingViability
+                      ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 hover:shadow-green-500/30 hover:shadow-xl active:scale-95"
+                      : "bg-gray-500/50 cursor-not-allowed"
                   }`}
               >
                 {isCheckingViability ? (
@@ -258,8 +314,10 @@ const CropSelect = () => {
                     <Loader2 size={18} className="animate-spin" />
                     {language === "hi" ? "जाँच..." : "Checking..."}
                   </span>
+                ) : language === "hi" ? (
+                  "व्यवहार्यता जाँचें"
                 ) : (
-                  language === "hi" ? "व्यवहार्यता जाँचें" : "Check Viability"
+                  "Check Viability"
                 )}
               </button>
             </div>
@@ -281,9 +339,10 @@ const CropSelect = () => {
                   transition-all duration-300
                   p-6 flex flex-col items-center justify-center gap-3
                   active:scale-95
-                  ${isSelected
-                    ? "bg-gradient-to-b from-white/30 to-white/10 border-2 border-[#43A047] shadow-[0_0_30px_rgba(67,160,71,0.3)] scale-[1.02]"
-                    : "bg-gradient-to-b from-white/20 to-white/5 border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] hover:from-white/25 hover:to-white/10"
+                  ${
+                    isSelected
+                      ? "bg-gradient-to-b from-white/30 to-white/10 border-2 border-[#43A047] shadow-[0_0_30px_rgba(67,160,71,0.3)] scale-[1.02]"
+                      : "bg-gradient-to-b from-white/20 to-white/5 border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] hover:from-white/25 hover:to-white/10"
                   }
                 `}
               >

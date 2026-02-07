@@ -45,6 +45,7 @@ CROP_DATABASE = {
         "water_need_category": "high",
         "season": "kharif",
         "states": ["UP", "Punjab", "Haryana", "Bihar"],
+        "image": "/sugarcane.webp",
     },
     "paddy": {
         "name_en": "Paddy (Rice)",
@@ -56,6 +57,7 @@ CROP_DATABASE = {
         "water_need_category": "high",
         "season": "kharif",
         "states": ["UP", "Punjab", "Haryana", "Bihar", "WB"],
+        "image": "/rice.webp",
     },
     "basmati": {
         "name_en": "Basmati Rice",
@@ -67,6 +69,7 @@ CROP_DATABASE = {
         "water_need_category": "high",
         "season": "kharif",
         "states": ["Punjab", "Haryana", "UP"],
+        "image": "/rice.webp",
     },
     
     # === MEDIUM WATER CROPS ===
@@ -80,6 +83,7 @@ CROP_DATABASE = {
         "water_need_category": "medium",
         "season": "rabi",
         "states": ["UP", "Punjab", "Haryana", "MP", "Rajasthan"],
+        "image": "/wheat.webp",
     },
     "maize": {
         "name_en": "Maize (Corn)",
@@ -91,6 +95,7 @@ CROP_DATABASE = {
         "water_need_category": "medium",
         "season": "kharif",
         "states": ["UP", "Bihar", "Rajasthan", "MP"],
+        "image": "/corn.webp",
     },
     "cotton": {
         "name_en": "Cotton",
@@ -102,6 +107,7 @@ CROP_DATABASE = {
         "water_need_category": "medium",
         "season": "kharif",
         "states": ["Punjab", "Haryana", "Rajasthan", "Gujarat"],
+        "image": "/cotton.webp",
     },
     "potato": {
         "name_en": "Potato",
@@ -113,6 +119,7 @@ CROP_DATABASE = {
         "water_need_category": "medium",
         "season": "rabi",
         "states": ["UP", "Punjab", "WB", "Bihar"],
+        "image": "/potato.webp",
     },
     "onion": {
         "name_en": "Onion",
@@ -124,6 +131,7 @@ CROP_DATABASE = {
         "water_need_category": "medium",
         "season": "rabi",
         "states": ["UP", "MP", "Rajasthan", "Bihar"],
+        "image": "/onion.webp",
     },
     "soybean": {
         "name_en": "Soybean",
@@ -135,6 +143,7 @@ CROP_DATABASE = {
         "water_need_category": "medium",
         "season": "kharif",
         "states": ["MP", "Rajasthan", "Maharashtra"],
+        "image": "/soybean.webp",
     },
     "groundnut": {
         "name_en": "Groundnut",
@@ -146,6 +155,7 @@ CROP_DATABASE = {
         "water_need_category": "medium",
         "season": "kharif",
         "states": ["Gujarat", "Rajasthan", "UP"],
+        "image": "/groundnut.webp",
     },
     
     # === LOW WATER CROPS (Drought Resistant) ===
@@ -159,6 +169,7 @@ CROP_DATABASE = {
         "water_need_category": "low",
         "season": "rabi",
         "states": ["Rajasthan", "UP", "Haryana", "MP"],
+        "image": "/mustard.webp",
     },
     "chickpea": {
         "name_en": "Chickpea (Chana)",
@@ -170,6 +181,7 @@ CROP_DATABASE = {
         "water_need_category": "low",
         "season": "rabi",
         "states": ["MP", "Rajasthan", "UP", "Maharashtra"],
+        "image": "/chickpea.webp",
     },
     "lentil": {
         "name_en": "Lentil (Masoor)",
@@ -181,6 +193,7 @@ CROP_DATABASE = {
         "water_need_category": "low",
         "season": "rabi",
         "states": ["UP", "MP", "Bihar"],
+        "image": "/lentils.webp",
     },
     "pigeon_pea": {
         "name_en": "Pigeon Pea (Arhar/Tur)",
@@ -192,6 +205,7 @@ CROP_DATABASE = {
         "water_need_category": "low",
         "season": "kharif",
         "states": ["UP", "MP", "Maharashtra", "Karnataka"],
+        "image": "/pigeon-pea.webp",
     },
     "moong": {
         "name_en": "Green Gram (Moong)",
@@ -203,6 +217,7 @@ CROP_DATABASE = {
         "water_need_category": "low",
         "season": "kharif",
         "states": ["Rajasthan", "UP", "MP"],
+        "image": "/green-gram.webp",
     },
     "urad": {
         "name_en": "Black Gram (Urad)",
@@ -214,6 +229,7 @@ CROP_DATABASE = {
         "water_need_category": "low",
         "season": "kharif",
         "states": ["UP", "MP", "Rajasthan"],
+        "image": "/green-gram.webp",
     },
     "barley": {
         "name_en": "Barley",
@@ -225,6 +241,7 @@ CROP_DATABASE = {
         "water_need_category": "low",
         "season": "rabi",
         "states": ["UP", "Rajasthan", "MP", "Punjab"],
+        "image": "/barley.webp",
     },
     "bajra": {
         "name_en": "Pearl Millet (Bajra)",
@@ -236,6 +253,7 @@ CROP_DATABASE = {
         "water_need_category": "low",
         "season": "kharif",
         "states": ["Rajasthan", "Gujarat", "Haryana", "UP"],
+        "image": "/millet.webp",
     },
     "jowar": {
         "name_en": "Sorghum (Jowar)",
@@ -247,6 +265,7 @@ CROP_DATABASE = {
         "water_need_category": "low",
         "season": "kharif",
         "states": ["Maharashtra", "Karnataka", "MP", "Rajasthan"],
+        "image": "/millet.webp",
     },
     
     # === VEGETABLE CROPS ===
@@ -260,6 +279,7 @@ CROP_DATABASE = {
         "water_need_category": "medium",
         "season": "rabi",
         "states": ["UP", "MP", "Bihar", "Karnataka"],
+        "image": "/tomato.webp",
     },
     "brinjal": {
         "name_en": "Brinjal (Eggplant)",
@@ -271,6 +291,7 @@ CROP_DATABASE = {
         "water_need_category": "medium",
         "season": "kharif",
         "states": ["UP", "Bihar", "WB", "Odisha"],
+        "image": "/brinjal.webp",
     },
     "cabbage": {
         "name_en": "Cabbage",
@@ -282,6 +303,7 @@ CROP_DATABASE = {
         "water_need_category": "medium",
         "season": "rabi",
         "states": ["UP", "WB", "Bihar", "Odisha"],
+        "image": "/cabbage.webp",
     },
     "cauliflower": {
         "name_en": "Cauliflower",
@@ -293,6 +315,7 @@ CROP_DATABASE = {
         "water_need_category": "medium",
         "season": "rabi",
         "states": ["UP", "Bihar", "WB", "Punjab"],
+        "image": "/cauliflower.webp",
     },
     
     # === OILSEED CROPS ===
@@ -306,6 +329,7 @@ CROP_DATABASE = {
         "water_need_category": "medium",
         "season": "rabi",
         "states": ["Karnataka", "AP", "Maharashtra"],
+        "image": "/sunflower.webp",
     },
     "sesame": {
         "name_en": "Sesame (Til)",
@@ -317,6 +341,7 @@ CROP_DATABASE = {
         "water_need_category": "low",
         "season": "kharif",
         "states": ["UP", "Rajasthan", "Gujarat", "MP"],
+        "image": "/sesame.webp",
     },
 }
 

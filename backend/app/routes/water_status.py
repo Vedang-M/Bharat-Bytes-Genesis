@@ -412,7 +412,7 @@ async def list_crops():
             "water_req_mm": crop_data.get("water_req_mm", 500),
             "water_need_category": crop_data.get("water_need_category", "medium"),
             "season_days": crop_data.get("season_days", 120),
-            "image": f"/{crop_id}.webp",
+            "image": crop_data.get("image", f"/{crop_id}.webp"),
         })
     return {"crops": crops}
 
