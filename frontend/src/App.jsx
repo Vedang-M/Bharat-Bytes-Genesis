@@ -21,6 +21,7 @@ import Documentation from "./components/Documentation";
 import SarpanchDashboard from "./sarpanch/SarpanchDashboard";
 import AdminDashboard from "./components/AdminDashboard";
 import AppLayout from "./components/AppLayout";
+import Marketplace from "./pages/Marketplace";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
@@ -181,6 +182,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/marketplace"
+          element={
+            <ProtectedRoute>
+              <Marketplace />
             </ProtectedRoute>
           }
         />

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Droplet, Sprout, FileText, User, Shield } from "lucide-react";
+import { Droplet, Sprout, FileText, User, Shield, ShoppingBag } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getLanguage } from "../utils/languageUtils";
 
@@ -22,6 +22,7 @@ const Navigation = () => {
     const path = location.pathname;
     if (path === "/water" || path === "/") return "water";
     if (path === "/crops") return "crops";
+    if (path === "/marketplace") return "marketplace";
     if (path === "/advice") return "advice";
     if (path === "/profile") return "profile";
     if (path === "/admin") return "admin";
@@ -44,6 +45,13 @@ const Navigation = () => {
       labelHi: "फसल",
       labelEn: "Crops",
       path: "/crops",
+    },
+    {
+      id: "marketplace",
+      icon: ShoppingBag,
+      labelHi: "बाज़ार",
+      labelEn: "Market",
+      path: "/marketplace",
     },
     {
       id: "advice",

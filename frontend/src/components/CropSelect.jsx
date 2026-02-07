@@ -1,9 +1,10 @@
-import { Sprout, CheckCircle2, Loader2 } from "lucide-react";
+import { Sprout, CheckCircle2, Loader2, Leaf } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getTranslations, getLanguage } from "../utils/languageUtils";
 import { getCropsList } from "../utils/apiUtils";
 import { getSavedLocation } from "../utils/locationUtils";
+import SwapResultsModal from "./SwapResultsModal";
 
 const CropSelect = () => {
   const navigate = useNavigate();
@@ -12,6 +13,14 @@ const CropSelect = () => {
   const [crops, setCrops] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Crop planning states
+  const [plannedCrop, setPlannedCrop] = useState("");
+  const [season, setSeason] = useState("kharif");
+  const [landSize, setLandSize] = useState("");
+  const [isCheckingViability, setIsCheckingViability] = useState(false);
+  const [swapResults, setSwapResults] = useState(null);
+  const [showResultsModal, setShowResultsModal] = useState(false);
 
   useEffect(() => {
     const savedLanguage = getLanguage();
@@ -65,7 +74,7 @@ const CropSelect = () => {
   const handleSelect = (crop) => {
     setSelectedId(crop.id);
     console.log("Selected crop:", crop);
-    
+
     // Store selected crop in sessionStorage for CropResult page
     const location = getSavedLocation();
     sessionStorage.setItem("selectedCrop", JSON.stringify({
@@ -73,11 +82,52 @@ const CropSelect = () => {
       latitude: location?.latitude,
       longitude: location?.longitude,
     }));
-    
+
     // Navigate to advice (crop result) page
     setTimeout(() => {
       navigate("/advice");
     }, 300);
+  };
+
+  // Check crop viability by calling the sowing-swap API
+  const checkCropViability = async () => {
+    if (!plannedCrop) return;
+
+    setIsCheckingViability(true);
+    try {
+      const location = getSavedLocation();
+      const response = await fetch('http://localhost:8000/api/sowing-swap', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          current_crop: plannedCrop,
+          available_water_mm: 500, // Default value, can be fetched from water status
+          season: season,
+          location: location ? `${location.latitude},${location.longitude}` : null,
+          land_size_acres: landSize ? parseFloat(landSize) : null
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to check viability');
+      }
+
+      const data = await response.json();
+      setSwapResults(data);
+      setShowResultsModal(true);
+    } catch (err) {
+      console.error("Error checking crop viability:", err);
+      // Show error in results
+      setSwapResults({ error: err.message });
+      setShowResultsModal(true);
+    } finally {
+      setIsCheckingViability(false);
+    }
+  };
+
+  const closeModal = () => {
+    setShowResultsModal(false);
+    setSwapResults(null);
   };
 
   // --- REUSABLE GLASS STYLES (MATCHING PREVIOUS SCREEN) ---
@@ -123,6 +173,99 @@ const CropSelect = () => {
           </div>
         </header>
 
+        {/* Planning Your Crop Section */}
+        <div className={`mb-6 ${glassCardClass} p-5 rounded-[2rem] flex-shrink-0`}>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="bg-gradient-to-br from-[#1565C0] to-[#42A5F5] p-2.5 rounded-xl shadow-lg">
+              <Leaf size={24} className="text-white" />
+            </div>
+            <h2 className="text-xl md:text-2xl font-bold text-white drop-shadow-md">
+              {language === "hi" ? "अपनी फसल की योजना बनाएं?" : "Planning Your Crop?"}
+            </h2>
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-3 md:gap-4">
+            {/* Crop Selection Dropdown */}
+            <div className="flex-1">
+              <label className="text-white/80 text-sm font-medium mb-1 block">
+                {language === "hi" ? "फसल चुनें" : "Select Crop"}
+              </label>
+              <select
+                value={plannedCrop}
+                onChange={(e) => setPlannedCrop(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl bg-white/20 border border-white/20 text-white font-medium focus:outline-none focus:ring-2 focus:ring-green-400/50 transition-all"
+              >
+                <option value="" className="text-gray-800">
+                  {language === "hi" ? "फसल चुनें..." : "Select crop..."}
+                </option>
+                {crops.map((crop) => (
+                  <option key={crop.id} value={crop.id} className="text-gray-800">
+                    {crop.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Season Selection */}
+            <div className="flex-1 md:flex-none md:w-36">
+              <label className="text-white/80 text-sm font-medium mb-1 block">
+                {language === "hi" ? "मौसम" : "Season"}
+              </label>
+              <select
+                value={season}
+                onChange={(e) => setSeason(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl bg-white/20 border border-white/20 text-white font-medium focus:outline-none focus:ring-2 focus:ring-green-400/50 transition-all"
+              >
+                <option value="kharif" className="text-gray-800">
+                  {language === "hi" ? "खरीफ" : "Kharif"}
+                </option>
+                <option value="rabi" className="text-gray-800">
+                  {language === "hi" ? "रबी" : "Rabi"}
+                </option>
+                <option value="zaid" className="text-gray-800">
+                  {language === "hi" ? "जायद" : "Zaid"}
+                </option>
+              </select>
+            </div>
+
+            {/* Land Size Input */}
+            <div className="flex-1 md:flex-none md:w-32">
+              <label className="text-white/80 text-sm font-medium mb-1 block">
+                {language === "hi" ? "जमीन (एकड़)" : "Land (acres)"}
+              </label>
+              <input
+                type="number"
+                value={landSize}
+                onChange={(e) => setLandSize(e.target.value)}
+                placeholder="e.g. 5"
+                className="w-full px-4 py-2.5 rounded-xl bg-white/20 border border-white/20 text-white font-medium placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-green-400/50 transition-all"
+              />
+            </div>
+
+            {/* Check Viability Button */}
+            <div className="flex items-end">
+              <button
+                onClick={checkCropViability}
+                disabled={!plannedCrop || isCheckingViability}
+                className={`w-full md:w-auto px-6 py-2.5 rounded-xl font-bold text-white shadow-lg transition-all duration-300
+                  ${plannedCrop && !isCheckingViability
+                    ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 hover:shadow-green-500/30 hover:shadow-xl active:scale-95"
+                    : "bg-gray-500/50 cursor-not-allowed"
+                  }`}
+              >
+                {isCheckingViability ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 size={18} className="animate-spin" />
+                    {language === "hi" ? "जाँच..." : "Checking..."}
+                  </span>
+                ) : (
+                  language === "hi" ? "व्यवहार्यता जाँचें" : "Check Viability"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Crop Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 flex-1 content-start overflow-y-auto pr-1 pb-4 custom-scrollbar">
           {crops.map((crop) => {
@@ -138,10 +281,9 @@ const CropSelect = () => {
                   transition-all duration-300
                   p-6 flex flex-col items-center justify-center gap-3
                   active:scale-95
-                  ${
-                    isSelected
-                      ? "bg-gradient-to-b from-white/30 to-white/10 border-2 border-[#43A047] shadow-[0_0_30px_rgba(67,160,71,0.3)] scale-[1.02]"
-                      : "bg-gradient-to-b from-white/20 to-white/5 border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] hover:from-white/25 hover:to-white/10"
+                  ${isSelected
+                    ? "bg-gradient-to-b from-white/30 to-white/10 border-2 border-[#43A047] shadow-[0_0_30px_rgba(67,160,71,0.3)] scale-[1.02]"
+                    : "bg-gradient-to-b from-white/20 to-white/5 border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] hover:from-white/25 hover:to-white/10"
                   }
                 `}
               >
@@ -196,6 +338,15 @@ const CropSelect = () => {
           })}
         </div>
       </div>
+
+      {/* Swap Results Modal */}
+      {showResultsModal && (
+        <SwapResultsModal
+          results={swapResults}
+          onClose={closeModal}
+          language={language}
+        />
+      )}
     </div>
   );
 };

@@ -1,0 +1,441 @@
+{
+    "sugarcane": {
+        "name": "Sugarcane",
+        "name_hi": "गन्ना",
+        "water_mm": 1800,
+        "season": [
+            "kharif"
+        ],
+        "profit_per_acre": 80000,
+        "growth_days": 300,
+        "sowing_months": [
+            "February",
+            "March"
+        ],
+        "harvest_months": [
+            "December",
+            "January",
+            "February"
+        ]
+    },
+    "paddy": {
+        "name": "Paddy (Rice)",
+        "name_hi": "धान",
+        "water_mm": 1200,
+        "season": [
+            "kharif"
+        ],
+        "profit_per_acre": 45000,
+        "growth_days": 120,
+        "sowing_months": [
+            "June",
+            "July"
+        ],
+        "harvest_months": [
+            "October",
+            "November"
+        ]
+    },
+    "wheat": {
+        "name": "Wheat",
+        "name_hi": "गेहूं",
+        "water_mm": 450,
+        "season": [
+            "rabi"
+        ],
+        "profit_per_acre": 40000,
+        "growth_days": 120,
+        "sowing_months": [
+            "October",
+            "November"
+        ],
+        "harvest_months": [
+            "March",
+            "April"
+        ]
+    },
+    "cotton": {
+        "name": "Cotton",
+        "name_hi": "कपास",
+        "water_mm": 700,
+        "season": [
+            "kharif"
+        ],
+        "profit_per_acre": 55000,
+        "growth_days": 180,
+        "sowing_months": [
+            "April",
+            "May",
+            "June"
+        ],
+        "harvest_months": [
+            "October",
+            "November",
+            "December"
+        ]
+    },
+    "chickpea": {
+        "name": "Chickpea (Chana)",
+        "name_hi": "चना",
+        "water_mm": 280,
+        "season": [
+            "rabi"
+        ],
+        "profit_per_acre": 45000,
+        "growth_days": 100,
+        "sowing_months": [
+            "October",
+            "November"
+        ],
+        "harvest_months": [
+            "February",
+            "March"
+        ]
+    },
+    "soybean": {
+        "name": "Soybean",
+        "name_hi": "सोयाबीन",
+        "water_mm": 450,
+        "season": [
+            "kharif"
+        ],
+        "profit_per_acre": 40000,
+        "growth_days": 100,
+        "sowing_months": [
+            "June",
+            "July"
+        ],
+        "harvest_months": [
+            "September",
+            "October"
+        ]
+    },
+    "pigeon_pea": {
+        "name": "Pigeon Pea (Tur/Arhar)",
+        "name_hi": "अरहर",
+        "water_mm": 350,
+        "season": [
+            "kharif"
+        ],
+        "profit_per_acre": 48000,
+        "growth_days": 150,
+        "sowing_months": [
+            "June",
+            "July"
+        ],
+        "harvest_months": [
+            "November",
+            "December"
+        ]
+    },
+    "maize": {
+        "name": "Maize (Corn)",
+        "name_hi": "मक्का",
+        "water_mm": 500,
+        "season": [
+            "kharif",
+            "rabi"
+        ],
+        "profit_per_acre": 35000,
+        "growth_days": 100,
+        "sowing_months": [
+            "June",
+            "July",
+            "October"
+        ],
+        "harvest_months": [
+            "September",
+            "October",
+            "February"
+        ]
+    },
+    "mustard": {
+        "name": "Mustard",
+        "name_hi": "सरसों",
+        "water_mm": 300,
+        "season": [
+            "rabi"
+        ],
+        "profit_per_acre": 35000,
+        "growth_days": 110,
+        "sowing_months": [
+            "October",
+            "November"
+        ],
+        "harvest_months": [
+            "February",
+            "March"
+        ]
+    },
+    "groundnut": {
+        "name": "Groundnut",
+        "name_hi": "मूंगफली",
+        "water_mm": 500,
+        "season": [
+            "kharif",
+            "zaid"
+        ],
+        "profit_per_acre": 50000,
+        "growth_days": 120,
+        "sowing_months": [
+            "June",
+            "July"
+        ],
+        "harvest_months": [
+            "October",
+            "November"
+        ]
+    },
+    "sunflower": {
+        "name": "Sunflower",
+        "name_hi": "सूरजमुखी",
+        "water_mm": 400,
+        "season": [
+            "rabi",
+            "zaid"
+        ],
+        "profit_per_acre": 35000,
+        "growth_days": 90,
+        "sowing_months": [
+            "October",
+            "November",
+            "February"
+        ],
+        "harvest_months": [
+            "January",
+            "February",
+            "May"
+        ]
+    },
+    "lentil": {
+        "name": "Lentil (Masoor)",
+        "name_hi": "मसूर",
+        "water_mm": 300,
+        "season": [
+            "rabi"
+        ],
+        "profit_per_acre": 42000,
+        "growth_days": 110,
+        "sowing_months": [
+            "October",
+            "November"
+        ],
+        "harvest_months": [
+            "February",
+            "March"
+        ]
+    },
+    "moong": {
+        "name": "Moong (Green Gram)",
+        "name_hi": "मूंग",
+        "water_mm": 350,
+        "season": [
+            "kharif",
+            "zaid"
+        ],
+        "profit_per_acre": 48000,
+        "growth_days": 65,
+        "sowing_months": [
+            "June",
+            "July",
+            "March"
+        ],
+        "harvest_months": [
+            "September",
+            "October",
+            "May"
+        ]
+    },
+    "urad": {
+        "name": "Urad (Black Gram)",
+        "name_hi": "उड़द",
+        "water_mm": 350,
+        "season": [
+            "kharif"
+        ],
+        "profit_per_acre": 46000,
+        "growth_days": 75,
+        "sowing_months": [
+            "June",
+            "July"
+        ],
+        "harvest_months": [
+            "September",
+            "October"
+        ]
+    },
+    "bajra": {
+        "name": "Bajra (Pearl Millet)",
+        "name_hi": "बाजरा",
+        "water_mm": 350,
+        "season": [
+            "kharif"
+        ],
+        "profit_per_acre": 30000,
+        "growth_days": 90,
+        "sowing_months": [
+            "June",
+            "July"
+        ],
+        "harvest_months": [
+            "September",
+            "October"
+        ]
+    },
+    "jowar": {
+        "name": "Jowar (Sorghum)",
+        "name_hi": "ज्वार",
+        "water_mm": 400,
+        "season": [
+            "kharif",
+            "rabi"
+        ],
+        "profit_per_acre": 28000,
+        "growth_days": 100,
+        "sowing_months": [
+            "June",
+            "July",
+            "October"
+        ],
+        "harvest_months": [
+            "September",
+            "October",
+            "February"
+        ]
+    },
+    "potato": {
+        "name": "Potato",
+        "name_hi": "आलू",
+        "water_mm": 500,
+        "season": [
+            "rabi"
+        ],
+        "profit_per_acre": 75000,
+        "growth_days": 90,
+        "sowing_months": [
+            "October",
+            "November"
+        ],
+        "harvest_months": [
+            "January",
+            "February"
+        ]
+    },
+    "onion": {
+        "name": "Onion",
+        "name_hi": "प्याज",
+        "water_mm": 350,
+        "season": [
+            "rabi",
+            "kharif"
+        ],
+        "profit_per_acre": 80000,
+        "growth_days": 120,
+        "sowing_months": [
+            "October",
+            "November",
+            "June"
+        ],
+        "harvest_months": [
+            "February",
+            "March",
+            "October"
+        ]
+    },
+    "tomato": {
+        "name": "Tomato",
+        "name_hi": "टमाटर",
+        "water_mm": 400,
+        "season": [
+            "rabi",
+            "kharif",
+            "zaid"
+        ],
+        "profit_per_acre": 90000,
+        "growth_days": 90,
+        "sowing_months": [
+            "October",
+            "June",
+            "February"
+        ],
+        "harvest_months": [
+            "January",
+            "September",
+            "May"
+        ]
+    },
+    "brinjal": {
+        "name": "Brinjal (Eggplant)",
+        "name_hi": "बैंगन",
+        "water_mm": 450,
+        "season": [
+            "kharif",
+            "rabi"
+        ],
+        "profit_per_acre": 70000,
+        "growth_days": 120,
+        "sowing_months": [
+            "June",
+            "October"
+        ],
+        "harvest_months": [
+            "October",
+            "February"
+        ]
+    },
+    "chilli": {
+        "name": "Chilli",
+        "name_hi": "मिर्च",
+        "water_mm": 500,
+        "season": [
+            "kharif",
+            "rabi"
+        ],
+        "profit_per_acre": 85000,
+        "growth_days": 150,
+        "sowing_months": [
+            "June",
+            "September"
+        ],
+        "harvest_months": [
+            "November",
+            "February"
+        ]
+    },
+    "turmeric": {
+        "name": "Turmeric",
+        "name_hi": "हल्दी",
+        "water_mm": 600,
+        "season": [
+            "kharif"
+        ],
+        "profit_per_acre": 100000,
+        "growth_days": 270,
+        "sowing_months": [
+            "May",
+            "June"
+        ],
+        "harvest_months": [
+            "January",
+            "February"
+        ]
+    },
+    "ginger": {
+        "name": "Ginger",
+        "name_hi": "अदरक",
+        "water_mm": 650,
+        "season": [
+            "kharif"
+        ],
+        "profit_per_acre": 120000,
+        "growth_days": 250,
+        "sowing_months": [
+            "April",
+            "May"
+        ],
+        "harvest_months": [
+            "December",
+            "January"
+        ]
+    }
+}

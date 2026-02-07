@@ -1,0 +1,163 @@
+{
+    "sugarcane": {
+        "mandi_name": "Kolhapur Sugar Mill",
+        "price_per_quintal": 350,
+        "distance_km": 25,
+        "demand_level": "moderate",
+        "contact": "Sugar Mill Direct Purchase"
+    },
+    "paddy": {
+        "mandi_name": "Nagpur APMC",
+        "price_per_quintal": 2200,
+        "distance_km": 15,
+        "demand_level": "high",
+        "contact": "Government Procurement Center"
+    },
+    "wheat": {
+        "mandi_name": "Thane APMC",
+        "price_per_quintal": 2350,
+        "distance_km": 12,
+        "demand_level": "high",
+        "contact": "FCI Procurement"
+    },
+    "cotton": {
+        "mandi_name": "Thane Cotton Market",
+        "price_per_quintal": 6620,
+        "distance_km": 15,
+        "demand_level": "moderate",
+        "contact": "Cotton Corporation of India"
+    },
+    "chickpea": {
+        "mandi_name": "Nashik Mandi",
+        "price_per_quintal": 5200,
+        "distance_km": 18,
+        "demand_level": "high",
+        "contact": "NAFED Procurement"
+    },
+    "soybean": {
+        "mandi_name": "Ahmednagar APMC",
+        "price_per_quintal": 4600,
+        "distance_km": 25,
+        "demand_level": "high",
+        "contact": "Oil Mill Direct"
+    },
+    "pigeon_pea": {
+        "mandi_name": "Pune APMC",
+        "price_per_quintal": 6500,
+        "distance_km": 35,
+        "demand_level": "high",
+        "contact": "Dal Mill Procurement"
+    },
+    "maize": {
+        "mandi_name": "Kalyan Mandi",
+        "price_per_quintal": 2090,
+        "distance_km": 8,
+        "demand_level": "high",
+        "contact": "Poultry Feed Industries"
+    },
+    "mustard": {
+        "mandi_name": "Jalgaon APMC",
+        "price_per_quintal": 5500,
+        "distance_km": 30,
+        "demand_level": "high",
+        "contact": "Oil Mill Direct"
+    },
+    "groundnut": {
+        "mandi_name": "Solapur APMC",
+        "price_per_quintal": 5850,
+        "distance_km": 40,
+        "demand_level": "high",
+        "contact": "Groundnut Oil Mills"
+    },
+    "sunflower": {
+        "mandi_name": "Sangli APMC",
+        "price_per_quintal": 6400,
+        "distance_km": 45,
+        "demand_level": "moderate",
+        "contact": "Sunflower Oil Mills"
+    },
+    "lentil": {
+        "mandi_name": "Amravati APMC",
+        "price_per_quintal": 6200,
+        "distance_km": 50,
+        "demand_level": "high",
+        "contact": "Dal Processing Units"
+    },
+    "moong": {
+        "mandi_name": "Aurangabad APMC",
+        "price_per_quintal": 7755,
+        "distance_km": 35,
+        "demand_level": "high",
+        "contact": "Sprout & Dal Industries"
+    },
+    "urad": {
+        "mandi_name": "Latur APMC",
+        "price_per_quintal": 6800,
+        "distance_km": 42,
+        "demand_level": "high",
+        "contact": "Dal Mills"
+    },
+    "bajra": {
+        "mandi_name": "Dhule APMC",
+        "price_per_quintal": 2500,
+        "distance_km": 28,
+        "demand_level": "moderate",
+        "contact": "Flour Mills"
+    },
+    "jowar": {
+        "mandi_name": "Satara APMC",
+        "price_per_quintal": 3180,
+        "distance_km": 32,
+        "demand_level": "moderate",
+        "contact": "Flour & Cattle Feed Mills"
+    },
+    "potato": {
+        "mandi_name": "Vashi APMC",
+        "price_per_quintal": 1500,
+        "distance_km": 10,
+        "demand_level": "high",
+        "contact": "Wholesale Vegetable Traders"
+    },
+    "onion": {
+        "mandi_name": "Lasalgaon APMC",
+        "price_per_quintal": 2000,
+        "distance_km": 45,
+        "demand_level": "high",
+        "contact": "Asia's Largest Onion Market"
+    },
+    "tomato": {
+        "mandi_name": "Thane Vegetable Market",
+        "price_per_quintal": 2500,
+        "distance_km": 10,
+        "demand_level": "high",
+        "contact": "Direct Market Sales"
+    },
+    "brinjal": {
+        "mandi_name": "Panvel APMC",
+        "price_per_quintal": 1800,
+        "distance_km": 15,
+        "demand_level": "high",
+        "contact": "Vegetable Wholesalers"
+    },
+    "chilli": {
+        "mandi_name": "Nanded APMC",
+        "price_per_quintal": 12000,
+        "distance_km": 55,
+        "demand_level": "high",
+        "contact": "Spice Processing Units"
+    },
+    "turmeric": {
+        "mandi_name": "Sangli Turmeric Market",
+        "price_per_quintal": 8500,
+        "distance_km": 48,
+        "demand_level": "high",
+        "contact": "Spice & Pharma Industries"
+    },
+    "ginger": {
+        "mandi_name": "Kolhapur APMC",
+        "price_per_quintal": 15000,
+        "distance_km": 52,
+        "demand_level": "high",
+        "contact": "Ginger Processing Units"
+    }
+}
