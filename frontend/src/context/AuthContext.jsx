@@ -92,8 +92,21 @@ export function AuthProvider({ children }) {
         }
 
         // Fallback: Create basic profile from Firebase Auth or localStorage
-        // This handles cases where Firestore is unavailable or document doesn't exist
-        let fallbackProfile = { uid, role: "farmer" };
+        // IMPORTANT: Read role from localStorage first to preserve sarpanch/admin roles
+        let storedRole = "farmer"; // Default fallback
+        try {
+            const storedUser = localStorage.getItem("genesis_user_data");
+            if (storedUser) {
+                const parsed = JSON.parse(storedUser);
+                if (parsed.role) {
+                    storedRole = parsed.role; // Use stored role if available
+                }
+            }
+        } catch (e) {
+            console.error("Error reading stored role:", e);
+        }
+
+        let fallbackProfile = { uid, role: storedRole };
 
         if (firebaseUser) {
             fallbackProfile.name = firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "User";
@@ -101,12 +114,13 @@ export function AuthProvider({ children }) {
             fallbackProfile.createdAt = firebaseUser.metadata?.creationTime || new Date().toISOString();
         }
 
-        // Try localStorage as another fallback
+        // Merge with full localStorage data for other fields
         try {
             const storedUser = localStorage.getItem("genesis_user_data");
             if (storedUser) {
                 const parsed = JSON.parse(storedUser);
-                fallbackProfile = { ...fallbackProfile, ...parsed };
+                // Merge but keep the role we already determined
+                fallbackProfile = { ...fallbackProfile, ...parsed, role: fallbackProfile.role };
             }
         } catch (e) {
             console.error("Error reading stored user:", e);

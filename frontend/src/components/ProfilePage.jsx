@@ -397,6 +397,44 @@ const ProfilePage = () => {
                     </p>
                   </div>
                 </div>
+
+                {/* DEV MODE: Role Switcher */}
+                <div className="space-y-3 md:col-span-2 mt-4 p-4 bg-yellow-500/20 border border-yellow-500/40 rounded-2xl">
+                  <label className="text-xs font-black text-yellow-300 uppercase tracking-widest flex items-center gap-2">
+                    ⚡ {currentLanguage === "hi" ? "डेव मोड: भूमिका बदलें" : "DEV MODE: Switch Role"}
+                  </label>
+                  <div className="flex flex-wrap gap-3">
+                    {["farmer", "sarpanch", "admin"].map((role) => (
+                      <button
+                        key={role}
+                        onClick={() => {
+                          // Update localStorage
+                          const storedUser = localStorage.getItem("genesis_user_data");
+                          if (storedUser) {
+                            const userData = JSON.parse(storedUser);
+                            userData.role = role;
+                            localStorage.setItem("genesis_user_data", JSON.stringify(userData));
+                          } else {
+                            localStorage.setItem("genesis_user_data", JSON.stringify({ role }));
+                          }
+                          // Reload to apply changes
+                          window.location.reload();
+                        }}
+                        className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${effectiveProfile?.role === role
+                            ? "bg-green-500 text-white"
+                            : "bg-white/20 text-white hover:bg-white/30"
+                          }`}
+                      >
+                        {role === "farmer" ? "👨‍🌾 Farmer" : role === "sarpanch" ? "🏛️ Sarpanch" : "⚙️ Admin"}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-yellow-200/70">
+                    {currentLanguage === "hi"
+                      ? "डेमो प्रयोजनों के लिए। चयन करने के बाद पेज रीलोड होगा।"
+                      : "For demo purposes. Page will reload after selection."}
+                  </p>
+                </div>
               </div>
 
               {/* Edit Actions */}
