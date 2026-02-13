@@ -81,6 +81,8 @@ KisanSetu provides:
 - **Sarpanch (Village Head)** - Dashboard for community-level water oversight
 - **Admin** - Platform administration and analytics
 
+> **Note:** A **Dev Mode Role Switcher** is available in the User Profile to easily switch between roles for demonstration.
+
 ---
 
 ## 🛠️ Tech Stack
@@ -197,7 +199,7 @@ Bharat-Bytes-Genesis/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/Bharat-Bytes-Genesis.git
+git clone https://github.com/Vedang-M/Bharat-Bytes-Genesis.git
 cd Bharat-Bytes-Genesis
 ```
 
